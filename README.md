@@ -1,5 +1,8 @@
 # GlycA and ischemic stroke: two-sample Mendelian randomization
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24167120.svg)](https://doi.org/10.5281/zenodo.24167120)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Analysis code and results for the study of circulating glycoprotein acetyls (GlycA) as a causal risk
 factor for ischemic stroke and its subtypes. Everything reported in the article is produced by the
 scripts in this repository and exported to a single table, `tables/manuscript_numbers.csv`.
@@ -73,5 +76,7 @@ Python multivariable code against the R results.
 
 ## License and citation
 
-Code: MIT (see `LICENSE`). Cite the article and, for the code, the archived release (see
+Code: MIT (see `LICENSE`). Archived release: Zenodo, concept DOI
+[10.5281/zenodo.24167120](https://doi.org/10.5281/zenodo.24167120) (this DOI always resolves to the
+newest version). Cite the article for the findings and the archived release for the code (see
 `CITATION.cff`).
