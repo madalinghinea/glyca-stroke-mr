@@ -1,0 +1,94 @@
+---
+title: "10 - Export of every number quoted in the manuscript (tables/manuscript_numbers.csv)"
+format: html
+---
+
+The manuscript text is generated from `tables/manuscript_numbers.csv` (key, value), so every number in the paper traces to
+the script that produced it.
+
+```{r setup}
+source("00_setup.R")
+bat <- setNames(lapply(OUTCOMES$key, load_battery), OUTCOMES$key)         # five outcomes + MEGASTROKE cardioembolic
+rb  <- readRDS(need_file(file.path(DIR$proc, "robustness_summary.rds"), "run 07_robustness.qmd"))
+mvo <- readRDS(need_file(file.path(DIR$proc, "mvmr_summary.rds"), "run 05_mvmr.qmd"))
+exp_dat <- readRDS(need_file(file.path(DIR$proc, "exp_dat.rds"), "run 01_extract_exposure.qmd stage A"))
+out <- list(); add <- function(k, v) out[[k]] <<- v
+```
+
+```{r numbers}
+for (o in names(bat)) {                                             # estimates, heterogeneity, pleiotropy, MR-PRESSO, Steiger, leave-one-out
+  b <- bat[[o]]; r <- b$res; h <- b$het; ps <- b$presso_sum
+  add(paste0(o, ".n_snps"), nrow(b$dat))
+  for (m in names(M)) {
+    x <- pick_method(r, m); ci <- or_ci(x$b, x$se); p <- paste0(o, ".", m)
+    add(paste0(p, ".b"), x$b); add(paste0(p, ".se"), x$se); add(paste0(p, ".OR"), ci$OR); add(paste0(p, ".lci"), ci$OR_lci)
+    add(paste0(p, ".uci"), ci$OR_uci); add(paste0(p, ".p"), x$pval)
+  }
+  add(paste0(o, ".Q_ivw"), pick_method(h, "ivw")$Q); add(paste0(o, ".Qdf_ivw"), pick_method(h, "ivw")$Q_df); add(paste0(o, ".Qp_ivw"), pick_method(h, "ivw")$Q_pval)
+  add(paste0(o, ".Q_egger"), pick_method(h, "egger")$Q); add(paste0(o, ".Qp_egger"), pick_method(h, "egger")$Q_pval)
+  add(paste0(o, ".egger_int"), b$pleio$egger_intercept); add(paste0(o, ".egger_int_se"), b$pleio$se); add(paste0(o, ".egger_int_p"), b$pleio$pval)
+  add(paste0(o, ".presso_rss"), ps$global_rss); add(paste0(o, ".presso_global_p"), as.character(ps$global_p)); add(paste0(o, ".presso_n_outliers"), ps$n_outliers)
+  add(paste0(o, ".presso_outliers"), ps$outlier_snps); add(paste0(o, ".presso_distortion_p"), ps$distortion_p)
+  add(paste0(o, ".presso_corr.OR"), exp(ps$corr_b)); add(paste0(o, ".presso_corr.lci"), exp(ps$corr_b - 1.96 * ps$corr_se))
+  add(paste0(o, ".presso_corr.uci"), exp(ps$corr_b + 1.96 * ps$corr_se)); add(paste0(o, ".presso_corr.p"), ps$corr_p)
+  add(paste0(o, ".steiger_false"), paste(b$dat$SNP[!b$dat$steiger_dir], collapse = ";")); add(paste0(o, ".steiger_true_n"), sum(b$dat$steiger_dir))
+  add(paste0(o, ".min_outcome_p"), min(b$dat$pval.outcome))
+  l <- b$loo[b$loo$SNP != "All", ]; add(paste0(o, ".loo_p_min"), min(l$p)); add(paste0(o, ".loo_p_max"), max(l$p))
+  top <- l[which.max(abs(l$b - pick_method(r, "ivw")$b)), ]
+  add(paste0(o, ".loo_largest_shift_snp"), top$SNP); add(paste0(o, ".loo_largest_shift_OR"), exp(top$b)); add(paste0(o, ".loo_largest_shift_p"), top$p)
+}
+
+Fs <- (exp_dat$beta.exposure / exp_dat$se.exposure)^2                # instruments and loci
+add("inst.n", nrow(exp_dat)); add("inst.F_min", min(Fs)); add("inst.F_max", max(Fs)); add("inst.F_mean", mean(Fs))
+add("inst.R2_total", sum(2 * exp_dat$eaf.exposure * (1 - exp_dat$eaf.exposure) * exp_dat$beta.exposure^2))
+R2_tot <- sum(2 * exp_dat$eaf.exposure * (1 - exp_dat$eaf.exposure) * exp_dat$beta.exposure^2)
+add("inst.F_joint", (R2_tot / (1 - R2_tot)) * (N_EXPOSURE - nrow(exp_dat) - 1) / nrow(exp_dat))
+gm <- outcome_meta("GIGASTROKE"); add("overlap.max_fraction_gigastroke", N_EXPOSURE / (gm$ncase + gm$ncontrol)); add("overlap.gigastroke_n", gm$ncase + gm$ncontrol)
+loc <- read.csv(file.path(DIR$tab, "TableS12b_locus_definitions.csv"))
+add("inst.n_loci", n_distinct(loc$Locus_ID))
+add("inst.n_hp_locus", loc$N_instruments[loc$SNP == LOCUS_ANCHORS$HP]); add("inst.n_lpa_locus", loc$N_instruments[loc$SNP == LOCUS_ANCHORS$LPA])
+
+s8 <- read.csv(file.path(DIR$tab, "TableS8_power_calculation.csv"), check.names = FALSE)   # power (Table S8)
+for (i in seq_len(nrow(s8))) for (cn in setdiff(names(s8), "outcome")) add(paste0(s8$outcome[i], ".s8.", cn), s8[i, cn])
+
+t6 <- mvo$table_s6                                                  # multivariable MR
+for (i in seq_len(nrow(t6))) { id <- t6$id.exposure[i]
+  add(paste0("mvmr.", id, ".b"), t6$b[i]); add(paste0("mvmr.", id, ".se"), t6$se[i]); add(paste0("mvmr.", id, ".p"), t6$pval[i]); add(paste0("mvmr.", id, ".nsnp"), t6$nsnp[i]) }
+for (id in names(mvo$F3)) add(paste0("mvmr.", id, ".condF"), mvo$F3[[id]])
+add("mvmr.Qa", mvo$Qa$Qstat); add("mvmr.Qa_df", mvo$Qa_df); add("mvmr.Qa_p", mvo$Qa$Qpval)
+tr <- mvo$tradeoff
+for (i in seq_len(nrow(tr))) { k <- c("alone", "bmi", "smk", "all3")[i]
+  add(paste0("mvmr.tr.", k, ".b"), tr$GlycA_beta[i]); add(paste0("mvmr.tr.", k, ".se"), tr$GlycA_se[i])
+  add(paste0("mvmr.tr.", k, ".p"), tr$GlycA_p[i]); add(paste0("mvmr.tr.", k, ".F"), tr$GlycA_conditional_F[i]) }
+add("mvmr.tr.bmi.F_bmi", tr$BMI_conditional_F[2]); add("mvmr.tr.smk.F_smk", tr$smoking_conditional_F[3])
+
+S11 <- rb$S11; labs <- setNames(OUTCOMES$short, OUTCOMES$key)       # robustness analyses
+g <- function(o, s, m = "IVW") S11[S11$Outcome == o & S11$Analysis_set == s & S11$Method == m, ][1, ]
+for (o in names(labs)) for (s in names(SET_LABELS)[-1]) {
+  x <- g(labs[[o]], SET_LABELS[[s]])
+  if (nrow(x) && !is.na(x$OR)) { p <- paste0("rob.", o, ".", s)
+    add(paste0(p, ".OR"), x$OR); add(paste0(p, ".lci"), x$CI_lower); add(paste0(p, ".uci"), x$CI_upper); add(paste0(p, ".p"), x$P); add(paste0(p, ".n"), x$N_SNPs) }
+}
+for (o in KEYS) { x <- rb$raps[rb$raps$outcome == o, ]
+  add(paste0("raps.", o, ".OR"), x$OR); add(paste0("raps.", o, ".lci"), x$lci); add(paste0("raps.", o, ".uci"), x$uci); add(paste0("raps.", o, ".p"), x$pval) }
+s12 <- rb$S12
+for (i in seq_len(nrow(s12))) for (cn in c("N_loci", "IVW_OR_min", "IVW_OR_max", "P_min", "P_max", "N_loci_with_P_lt_0.05")) add(paste0("llo.", s12$Outcome[i], ".", cn), s12[[cn]][i])
+
+afm <- rb$afm                                                       # atrial fibrillation
+for (o in unique(afm$outcome_label)) for (m in names(M)[1:3]) {
+  x <- afm[afm$outcome_label == o & afm$method == M[[m]], ]; p <- paste0("af_to.", o, ".", m)
+  add(paste0(p, ".OR"), x$OR); add(paste0(p, ".lci"), x$lci); add(paste0(p, ".uci"), x$uci); add(paste0(p, ".p"), x$pval); add(paste0(p, ".n"), x$nsnp)
+}
+mga <- rb$mga
+for (m in names(M)) { x <- pick_method(mga, m); p <- paste0("glyca_to_af.", m)
+  add(paste0(p, ".OR"), x$OR); add(paste0(p, ".lci"), x$lci); add(paste0(p, ".uci"), x$uci); add(paste0(p, ".p"), x$pval); add(paste0(p, ".n"), x$nsnp) }
+S14 <- read.csv(file.path(DIR$tab, "TableS14_atrial_fibrillation_analyses.csv")); x <- S14[S14$Analysis == "GlycA -> AF" & S14$Method == "MR-RAPS", ]
+add("glyca_to_af.raps.OR", x$OR); add("glyca_to_af.raps.p", x$P); add("glyca_to_af.Qp", S14$Q_P[S14$Analysis == "GlycA -> AF"][1])
+for (cn in names(rb$med)) add(paste0("med.", cn), rb$med[[cn]])
+add("af.n_lead", nrow(readRDS(file.path(DIR$proc, "af_instruments.rds"))))
+
+add("alpha.bonf3", 0.05 / 3); add("alpha.bonf5", 0.05 / 5)           # multiplicity thresholds
+nums <- data.frame(key = names(out), value = vapply(out, function(v) as.character(v)[1], ""), stringsAsFactors = FALSE)
+write.csv(nums, file.path(DIR$tab, "manuscript_numbers.csv"), row.names = FALSE)
+cat("Exported", nrow(nums), "numbers\n")
+```

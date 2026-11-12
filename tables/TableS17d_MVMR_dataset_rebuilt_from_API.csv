@@ -1,0 +1,4 @@
+Analysis,Outcome,Exposure,N_SNPs,Beta,SE,P,OR,OR_lci,OR_uci,Conditional_F,Q_A,Q_A_df,Q_A_P,Residual_sigma
+"GlycA + BMI + smoking, rebuilt from the API",MEGASTROKE (ebi-a-GCST006908),GlycA,446,0.01646,0.04875,0.7356,1.017,0.9239,1.119,8.26,618.5,443,6.393e-08,1.183
+"GlycA + BMI + smoking, rebuilt from the API",MEGASTROKE (ebi-a-GCST006908),BMI,446,0.1427,0.04264,0.0008172,1.153,1.061,1.254,23.75,618.5,443,6.393e-08,1.183
+"GlycA + BMI + smoking, rebuilt from the API",MEGASTROKE (ebi-a-GCST006908),Smoking_initiation,446,0.08593,0.07053,0.2231,1.09,0.949,1.251,5.017,618.5,443,6.393e-08,1.183

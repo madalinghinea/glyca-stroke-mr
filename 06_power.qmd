@@ -1,0 +1,42 @@
+---
+title: "06 - Statistical power and minimum detectable effect (Table S8)"
+format: html
+---
+
+Two calculations per outcome. (i) Idealised: the Brion, Shakhbazov & Visscher (2013) variance-explained formula, with the
+instrument R2 and case fraction determining the IVW standard error. (ii) Empirical: the observed IVW standard error, which
+is larger because SNP-outcome standard errors exceed the case-control formula (imputation quality, uneven per-SNP sample
+size) and because the random-effects model inflates the standard error under heterogeneity. The manuscript quotes the
+empirical minimum detectable effect. Power at the observed estimate (post-hoc power) is not computed.
+
+```{r setup}
+source("00_setup.R")
+bat <- load_batteries()
+Z   <- qnorm(0.975) + qnorm(0.80)                                    # alpha = 0.05 (two-sided), power = 80%
+power_at <- function(se, OR, alpha = 0.05) { x <- abs(log(OR)) / se; z <- qnorm(1 - alpha / 2); pnorm(x - z) + pnorm(-x - z) }
+```
+
+```{r table_s8}
+tab <- do.call(rbind, lapply(KEYS, function(k) {
+  b <- bat[[k]]; d <- b$dat; m <- b$meta
+  N <- m$ncase + m$ncontrol; kc <- m$ncase / N
+  R2       <- sum(2 * d$eaf.exposure * (1 - d$eaf.exposure) * d$beta.exposure^2)            # retained SNPs only
+  se_ideal <- 1 / sqrt(N * R2 * kc * (1 - kc))
+  se_fe    <- 1 / sqrt(sum(d$beta.exposure^2 / d$se.outcome^2))                             # fixed-effect IVW SE from the data
+  ivw      <- pick_method(b$res, "ivw")
+  se_obs   <- ivw$se
+  exp_se_y <- 1 / sqrt(N * kc * (1 - kc) * 2 * d$eaf.outcome * (1 - d$eaf.outcome))         # SNP-outcome SE expected from the case-control formula
+  data.frame(
+    outcome = k, N_cases = m$ncase, N_controls = m$ncontrol, n_snp_retained = nrow(d), R2_retained_snps = round(R2, 4),
+    IVW_SE_idealised_Brion = round(se_ideal, 4), IVW_SE_fixed_effect_from_data = round(se_fe, 4),
+    random_effects_inflation = round(se_obs / se_fe, 2), IVW_SE_observed = round(se_obs, 4),
+    median_ratio_observed_to_expected_SNP_outcome_SE = round(median(d$se.outcome / exp_se_y, na.rm = TRUE), 2),
+    MDE80_idealised_low = round(exp(-Z * se_ideal), 3), MDE80_idealised_high = round(exp(Z * se_ideal), 3),
+    MDE80_empirical_low = round(exp(-Z * se_obs), 3), MDE80_empirical_high = round(exp(Z * se_obs), 3),
+    `power_at_OR_1.10_empirical` = round(power_at(se_obs, 1.10), 3), `power_at_OR_0.90_empirical` = round(power_at(se_obs, 0.90), 3),
+    IVW_OR_95CI_lower = round(exp(ivw$b - 1.96 * se_obs), 3), IVW_OR_95CI_upper = round(exp(ivw$b + 1.96 * se_obs), 3),
+    check.names = FALSE)
+}))
+print(t(tab))
+write.csv(tab, file.path(DIR$tab, "TableS8_power_calculation.csv"), row.names = FALSE)
+```

@@ -1,0 +1,7 @@
+Instrument_set,Method,N_SNPs,Beta_SD_GlycA_per_logOR,SE,CI_lower,CI_upper,P,Cochran_Q_P,Steiger_correct_direction,Egger_intercept_P
+GIGASTROKE ischemic stroke (GCST90104540),Inverse variance weighted,21,-0.00812,0.02552,-0.05815,0.04191,0.7504,0.01579,21/21,
+GIGASTROKE ischemic stroke (GCST90104540),MR-Egger,21,-0.1192,0.12,-0.3544,0.1161,0.3332,,,0.3555
+GIGASTROKE ischemic stroke (GCST90104540),Weighted median,21,0.0004982,0.0305,-0.05929,0.06028,0.987,,,
+MEGASTROKE ischemic stroke (ebi-a-GCST006908),Inverse variance weighted,9,-0.0198,0.03134,-0.08124,0.04163,0.5275,0.03172,9/9,
+MEGASTROKE ischemic stroke (ebi-a-GCST006908),MR-Egger,9,0.0874,0.2402,-0.3833,0.5581,0.7267,,,0.6659
+MEGASTROKE ischemic stroke (ebi-a-GCST006908),Weighted median,9,-0.0219,0.03262,-0.08583,0.04203,0.5019,,,

@@ -1,0 +1,6 @@
+"outcome","N_cases","N_controls","n_snp_retained","R2_retained_snps","IVW_SE_idealised_Brion","IVW_SE_fixed_effect_from_data","random_effects_inflation","IVW_SE_observed","median_ratio_observed_to_expected_SNP_outcome_SE","MDE80_idealised_low","MDE80_idealised_high","MDE80_empirical_low","MDE80_empirical_high","power_at_OR_1.10_empirical","power_at_OR_0.90_empirical","IVW_OR_95CI_lower","IVW_OR_95CI_upper"
+"MEGASTROKE",34217,406111,54,0.0483,0.0256,0.0347,1.22,0.0424,1.32,0.931,1.074,0.888,1.126,0.614,0.701,0.901,1.064
+"GIGASTROKE",62100,1234808,45,0.0417,0.0201,0.0263,1.59,0.0419,1.26,0.945,1.058,0.889,1.125,0.623,0.71,0.893,1.053
+"CES",10804,1234808,41,0.0373,0.05,0.063,1,0.063,1.21,0.869,1.15,0.838,1.193,0.328,0.387,0.754,0.966
+"LAS",6399,1234808,33,0.0335,0.0684,0.0892,1.64,0.1462,1.24,0.826,1.211,0.664,1.506,0.1,0.111,0.761,1.349
+"SVS",6811,1234808,33,0.0293,0.0709,0.0839,1.28,0.1072,1.18,0.82,1.22,0.741,1.35,0.144,0.166,0.884,1.346

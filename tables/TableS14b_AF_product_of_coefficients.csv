@@ -1,0 +1,13 @@
+"quantity","value"
+"total_logOR",-0.15855
+"a_GlycA_to_AF",-0.05027
+"a_se",0.03866
+"b_AF_to_CES",0.64471
+"b_se",0.02598
+"indirect",-0.03241
+"indirect_se",0.02496
+"indirect_lci",-0.08132
+"indirect_uci",0.0165
+"indirect_OR",0.96811
+"prop_mediated",0.20443
+"direct_logOR",-0.12614

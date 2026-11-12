@@ -1,0 +1,56 @@
+---
+title: "09 - Figures 1-5 and S1-S4 (Figure S5 is produced by 07_robustness.qmd)"
+format: html
+---
+
+File names follow the manuscript numbering. PDF (vector) and PNG (300 dpi) copies are written to `figures/`.
+
+```{r setup}
+source("00_setup.R")
+bat <- load_batteries()
+save_fig <- function(p, name, w, h) {
+  ggsave(file.path(DIR$fig, paste0(name, ".pdf")), p, width = w, height = h)
+  ggsave(file.path(DIR$fig, paste0(name, ".png")), p, width = w, height = h, dpi = 300)
+}
+# TwoSampleMR's default axis labels carry internal OpenGWAS identifiers; they are replaced by plain labels.
+plots <- function(b) {
+  y_lab <- sprintf("SNP effect on ischemic stroke (%s; log odds)", sub(".*\\((.*)\\)", "\\1", b$meta$label))
+  list(scatter = mr_scatter_plot(b$res, b$dat)[[1]] + labs(x = "SNP effect on GlycA (SD units)", y = y_lab),
+       funnel  = mr_funnel_plot(b$single)[[1]],
+       loo     = mr_leaveoneout_plot(b$loo)[[1]] + labs(x = "Leave-one-out IVW estimate (log odds ratio per SD GlycA; ischemic stroke)"),
+       forest  = mr_forest_plot(b$single)[[1]] + labs(x = "Single-SNP Wald-ratio estimate (log odds ratio per SD GlycA; ischemic stroke)"))
+}
+pm <- plots(bat$MEGASTROKE); pg <- plots(bat$GIGASTROKE)
+save_fig(pm$scatter, "Figure1_MEGASTROKE_scatter", 7, 6)
+save_fig(pm$funnel,  "Figure2_MEGASTROKE_funnel", 7, 6)
+save_fig(pg$scatter, "Figure3_GIGASTROKE_scatter", 7, 6)
+save_fig(pg$funnel,  "Figure4_GIGASTROKE_funnel", 7, 6)
+save_fig(pm$loo,     "FigureS1_MEGASTROKE_leave_one_out", 7, 10)
+save_fig(pg$loo,     "FigureS2_GIGASTROKE_leave_one_out", 7, 10)
+save_fig(pm$forest,  "FigureS3_MEGASTROKE_forest", 7, 10)
+save_fig(pg$forest,  "FigureS4_GIGASTROKE_forest", 7, 10)
+```
+
+## Figure 5 - overall vs. subtype estimates (exploratory subtype analyses)
+
+```{r fig5}
+f5 <- do.call(rbind, lapply(c("GIGASTROKE", "CES", "LAS", "SVS"), function(k) {
+  r <- pick_method(bat[[k]]$res, "ivw")
+  data.frame(key = k, OR = exp(r$b), lci = exp(r$b - 1.96 * r$se), uci = exp(r$b + 1.96 * r$se), p = r$pval, n = r$nsnp)
+}))
+name5 <- c("All ischemic stroke (GIGASTROKE, overall)", "Cardioembolic stroke (CES)", "Large-artery stroke (LAS)", "Small-vessel stroke (SVS)")
+f5$txt   <- sprintf("OR %.2f (%.2f-%.2f), p = %s, %d SNPs", f5$OR, f5$lci, f5$uci, formatC(f5$p, format = "f", digits = 3), f5$n)
+f5$label <- factor(paste0(name5, "\n", f5$txt), levels = rev(paste0(name5, "\n", f5$txt)))
+fig5 <- ggplot(f5, aes(x = OR, y = label)) +
+  geom_vline(xintercept = 1, linetype = "dashed", colour = "grey45") +
+  geom_errorbar(aes(xmin = lci, xmax = uci), width = 0.18, orientation = "y", linewidth = 0.6, colour = "grey20") +
+  geom_point(size = 3, colour = "#b03a1a") +
+  scale_x_log10(breaks = c(0.5, 0.75, 1, 1.5, 2)) + coord_cartesian(xlim = c(0.5, 2.2)) +
+  labs(x = "Odds ratio per SD GlycA (IVW, 95% CI)", y = NULL, title = "GlycA and ischemic stroke: overall vs. GIGASTROKE subtypes",
+       subtitle = "Inverse-variance-weighted estimates; dashed line = null effect (OR = 1). Subtype analyses are exploratory.") +
+  theme_minimal(base_size = 11) +
+  theme(panel.grid.minor = element_blank(), panel.grid.major.y = element_blank(), axis.text.y = element_text(hjust = 1, lineheight = 1.05),
+        plot.title = element_text(face = "bold", size = 12), plot.title.position = "plot", plot.subtitle = element_text(colour = "grey30", size = 9))
+save_fig(fig5, "Figure5_subtype_forest", 9, 4.6)
+print(f5[, c("key", "OR", "lci", "uci", "p", "n")], digits = 3)
+```

@@ -1,0 +1,50 @@
+---
+title: "04 - GIGASTROKE stroke subtypes (cardioembolic, large-artery, small-vessel)"
+format: html
+---
+
+Exploratory analyses added after the overall result was known. GIGASTROKE deposited one European GWAS per subtype,
+sharing the 1,234,808 controls of the overall analysis: CES `GCST90104541` (10,804 cases), LAS `GCST90104542` (6,399),
+SVS `GCST90104543` (6,811). Bonferroni thresholds: 0.0167 (three subtypes), 0.01 (five outcome analyses). The subtype
+and overall GWAS share controls and partly cases, so the tests are not independent.
+
+```{r setup}
+source("00_setup.R")
+exp_dat <- readRDS(need_file(file.path(DIR$proc, "exp_dat.rds"), "run 01_extract_exposure.qmd stage A"))
+```
+
+## Stage A - match (exact rsID) and harmonise
+
+```{r extract}
+f_h <- file.path(DIR$proc, "dat_subtype_harmonised.rds")
+if (RUN_EXTRACTION || !file.exists(f_h)) {
+  dat_subtype <- list()
+  for (k in c("CES", "LAS", "SVS")) {
+    full <- fread(get_raw(k), select = c("chromosome", "base_pair_location", "effect_allele", "other_allele",
+                                         "beta", "standard_error", "effect_allele_frequency", "p_value", "rsid"))
+    sub  <- as.data.frame(full[rsid %in% exp_dat$SNP]); rm(full); invisible(gc())
+    cat(k, ": matched", nrow(sub), "of", nrow(exp_dat), "instruments\n")
+    o <- format_data(sub, type = "outcome", snp_col = "rsid", beta_col = "beta", se_col = "standard_error",
+                     effect_allele_col = "effect_allele", other_allele_col = "other_allele",
+                     eaf_col = "effect_allele_frequency", pval_col = "p_value", chr_col = "chromosome", pos_col = "base_pair_location")
+    o$outcome <- outcome_meta(k)$label; o$id.outcome <- outcome_meta(k)$id
+    dat_subtype[[k]] <- harmonise_data(exposure_dat = exp_dat, outcome_dat = o, action = 2)
+  }
+  saveRDS(dat_subtype, f_h)
+}
+dat_subtype <- readRDS(f_h)
+```
+
+## Stage B - analysis (offline)
+
+Instruments failing the Steiger test within a subtype stay in the primary analysis, as for the other outcomes, and are
+removed in the sensitivity analysis of `07_robustness.qmd` (Table S11).
+
+```{r analysis}
+bat <- list()
+for (k in names(dat_subtype)) {
+  cat(k, ": harmonised rows", nrow(dat_subtype[[k]]), "| retained", sum(dat_subtype[[k]]$mr_keep), "\n")
+  bat[[k]] <- run_battery(dat_subtype[[k]], k)
+  print_battery(bat[[k]])
+}
+```

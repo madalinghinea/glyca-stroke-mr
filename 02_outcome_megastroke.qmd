@@ -1,0 +1,38 @@
+---
+title: "02 - MR vs MEGASTROKE (any ischemic stroke)"
+format: html
+---
+
+MEGASTROKE European ischemic stroke GWAS (`ebi-a-GCST006908`; 34,217 cases / 406,111 controls). IVW with random effects
+is the designated primary estimator for every outcome.
+
+```{r setup}
+source("00_setup.R")
+exp_dat <- readRDS(need_file(file.path(DIR$proc, "exp_dat.rds"), "run 01_extract_exposure.qmd stage A"))
+```
+
+## Stage A - extract and harmonise (OpenGWAS token)
+
+`extract_outcome_data()` searches LD proxies for missing instruments (r2 >= 0.8). `harmonise_data(action = 2)` aligns
+alleles and removes palindromic SNPs with intermediate allele frequency.
+
+```{r extract}
+f_h <- file.path(DIR$proc, "dat_megastroke_harmonised.rds")
+if (RUN_EXTRACTION || !file.exists(f_h)) {
+  out_dat <- extract_outcome_data(snps = exp_dat$SNP, outcomes = "ebi-a-GCST006908")
+  saveRDS(harmonise_data(exposure_dat = exp_dat, outcome_dat = out_dat, action = 2), f_h)
+}
+```
+
+## Stage B - analysis (offline)
+
+```{r analysis}
+dat <- readRDS(f_h)
+cat("Harmonised rows:", nrow(dat), "| retained:", sum(dat$mr_keep), "| removed:", paste(dat$SNP[!dat$mr_keep], collapse = ", "), "\n")
+cat("Instruments absent from the outcome (no proxy):", paste(setdiff(exp_dat$SNP, dat$SNP), collapse = ", "), "\n")
+
+b <- run_battery(dat, "MEGASTROKE")
+print_battery(b)
+b$res; b$het; b$pleio; b$presso_sum
+cat("Smallest outcome P among instruments:", signif(min(b$dat$pval.outcome), 3), "\n")
+```

@@ -1,0 +1,5 @@
+"model","n_snps","GlycA_beta","GlycA_se","GlycA_p","GlycA_OR","GlycA_OR_lci","GlycA_OR_uci","GlycA_conditional_F","BMI_conditional_F","smoking_conditional_F","note"
+"GlycA alone (446-SNP set)",446,0.0767,0.0472,0.104694968273114,1.0797,0.9844,1.1843,NA,NA,NA,"Diagnostic only: SNP set is dominated by BMI/smoking instruments; not a valid univariable MR estimate"
+"GlycA + BMI",446,0.0194,0.0487,0.691012016328844,1.0196,0.9267,1.1217,8.29,48.52,NA,""
+"GlycA + smoking",446,0.0609,0.0474,0.199671368425353,1.0628,0.9685,1.1664,8.67,NA,5.53,""
+"GlycA + BMI + smoking (manuscript)",446,0.0165,0.0488,0.735809674583919,1.0166,0.9239,1.1185,8.26,23.75,5.02,"Model reported in the manuscript"

@@ -1,0 +1,23 @@
+# never commit raw GWAS summary statistics (2.8 GB, redistributable from the sources instead)
+data/raw/
+*.h.tsv.gz
+*.tsv.gz
+*.vcf.gz
+*.tbi
+
+# never commit credentials
+*Token*.txt
+.Renviron
+.Rhistory
+.RData
+.Rproj.user/
+
+# local caches and build leftovers
+__pycache__/
+*.pyc
+*_cache/
+*_files/
+.ipynb_checkpoints/
+.DS_Store
+Thumbs.db
+~$*

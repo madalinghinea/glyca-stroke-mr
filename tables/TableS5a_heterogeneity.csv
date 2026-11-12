@@ -1,0 +1,5 @@
+"outcome_label","method","Q","Q_df","Q_pval"
+"MEGASTROKE","MR Egger",73.4552,52,0.0266599400226559
+"MEGASTROKE","Inverse variance weighted",79.2579,53,0.0112205612943931
+"GIGASTROKE","MR Egger",108.7624,43,1.29721341795395e-07
+"GIGASTROKE","Inverse variance weighted",111.5834,44,8.66577773227231e-08

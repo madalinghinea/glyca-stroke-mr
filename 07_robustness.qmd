@@ -1,0 +1,312 @@
+---
+title: "07 - Robustness analyses (Tables S11-S14, Figure S5)"
+format: html
+---
+
+Secondary analyses testing whether (a) the overall null and (b) the exploratory cardioembolic (CES) estimate depend on single
+loci, the SNP set, the estimator or atrial fibrillation (AF) pathways. The primary estimator stays random-effects IVW
+(`02`, `03`, `04`). Inputs: `mr_*.rds` from `02`-`04`; two raw GWAS Catalog files for the new data (MEGASTROKE cardioembolic
+GCST006910, 0.34 GB; AF GCST006414, 1.3 GB), downloaded by `get_raw()` and cached as small `.rds` files.
+
+```{r setup}
+source("00_setup.R")
+exp_dat <- readRDS(need_file(file.path(DIR$proc, "exp_dat.rds"), "run 01_extract_exposure.qmd stage A"))
+bat  <- load_batteries()
+outs <- lapply(bat, function(b) b$dat)                              # retained SNPs with Steiger flags
+cat("Smallest outcome P among instruments, all outcomes:", signif(min(sapply(outs, function(d) min(d$pval.outcome))), 3), "\n")
+```
+
+## 1. Loci
+
+```{r loci}
+loci <- define_loci(exp_dat)
+HP_locus  <- loci$locus[loci$SNP == LOCUS_ANCHORS$HP]               # haptoglobin region
+LPA_locus <- loci$locus[loci$SNP == LOCUS_ANCHORS$LPA]              # lipoprotein(a) region
+MHC_locus <- unique(loci$locus[loci$SNP %in% LOCUS_ANCHORS$MHC])    # major histocompatibility complex
+stopifnot(length(HP_locus) == 1, length(LPA_locus) == 1, length(MHC_locus) >= 1)
+cat("Loci:", n_distinct(loci$locus), "| multi-SNP loci:\n")
+print(loci %>% filter(n_snps > 1) %>% distinct(locus, locus_label, n_snps))
+snps_in <- function(L) loci$SNP[loci$locus %in% L]
+```
+
+## 2. Alternative SNP sets (IVW and weighted median)
+
+```{r subsets}
+common <- Reduce(intersect, lapply(outs, function(d) d$SNP))
+cat("SNPs retained in all five outcomes:", length(common), "\n")
+est <- function(d, key, set) {
+  if (nrow(d) < 3) return(NULL)
+  set.seed(SEED); m <- suppressMessages(mr(d, method_list = c("mr_ivw", "mr_weighted_median")))
+  data.frame(outcome = key, set = set, method = ifelse(m$method == M[["ivw"]], "IVW", "WM"), nsnp = nrow(d),
+             beta = m$b, se = m$se, OR = exp(m$b), lci = exp(m$b - 1.96 * m$se), uci = exp(m$b + 1.96 * m$se), pval = m$pval)
+}
+subsets_of <- function(d) {
+  s <- list(primary = d, hp = d[!d$SNP %in% snps_in(HP_locus), ], lpa = d[!d$SNP %in% snps_in(LPA_locus), ],
+            hlm = d[!d$SNP %in% snps_in(c(HP_locus, LPA_locus, MHC_locus)), ],
+            steiger = d[is.na(d$steiger_dir) | d$steiger_dir, ], common = d[d$SNP %in% common, ])
+  setNames(s, unname(SET_LABELS[names(s)]))
+}
+wide <- function(df) df %>% filter(method == "IVW") %>% mutate(txt = sprintf("%.3f (%.3f-%.3f) p=%.3g n=%d", OR, lci, uci, pval, nsnp)) %>%
+  select(outcome, set, txt) %>% pivot_wider(names_from = outcome, values_from = txt) %>% as.data.frame()
+rob <- bind_rows(lapply(KEYS, function(k) { ss <- subsets_of(outs[[k]]); bind_rows(lapply(names(ss), function(s) est(ss[[s]], k, s))) }))
+print(wide(rob), right = FALSE)
+```
+
+## 3. Leave-one-locus-out
+
+```{r llo}
+llo <- bind_rows(lapply(KEYS, function(k) {
+  d <- outs[[k]]; dl <- merge(d[, "SNP", drop = FALSE], loci[, c("SNP", "locus", "locus_label")], by = "SNP")
+  bind_rows(lapply(unique(dl$locus), function(L) {
+    dd <- d[!d$SNP %in% dl$SNP[dl$locus == L], ]
+    set.seed(SEED); m <- suppressMessages(mr(dd, method_list = "mr_ivw"))
+    data.frame(outcome_label = k, locus = L, locus_label = unique(dl$locus_label[dl$locus == L]), n_removed = nrow(d) - nrow(dd),
+               nsnp = nrow(dd), beta = m$b, se = m$se, OR = exp(m$b), lci = exp(m$b - 1.96 * m$se), uci = exp(m$b + 1.96 * m$se), pval = m$pval)
+  }))
+}))
+S12 <- llo %>% group_by(Outcome = outcome_label) %>%
+  summarise(N_loci = n(), IVW_OR_min = min(OR), IVW_OR_max = max(OR), P_min = min(pval), P_max = max(pval),
+            `N_loci_with_P_lt_0.05` = sum(pval < 0.05), Least_favourable_locus = locus_label[which.max(pval)])
+print(as.data.frame(S12), digits = 4)
+```
+
+## 4. MR-RAPS (robust to outliers and balanced pleiotropy)
+
+```{r raps}
+raps_fit <- function(d) suppressMessages(mr_raps(d$beta.exposure, d$beta.outcome, d$se.exposure, d$se.outcome,
+                                                 parameters = list(over.dispersion = TRUE, loss.function = "tukey", shrinkage = FALSE)))
+raps <- bind_rows(lapply(KEYS, function(k) {
+  d <- outs[[k]]; set.seed(SEED); r <- raps_fit(d)
+  data.frame(outcome = k, set = SET_LABELS[["primary"]], method = "MR-RAPS", nsnp = nrow(d), beta = r$b, se = r$se,
+             OR = exp(r$b), lci = exp(r$b - 1.96 * r$se), uci = exp(r$b + 1.96 * r$se), pval = r$pval)
+}))
+print(raps, digits = 4)
+```
+
+## 5. Consistency check in the earlier MEGASTROKE cardioembolic GWAS (GCST006910)
+
+A consistency check, not independent replication: the MEGASTROKE studies are part of GIGASTROKE, so case sets overlap, and
+GIGASTROKE added further cohorts including UK Biobank.
+
+```{r mega_ces}
+f_mc <- file.path(DIR$proc, "dat_megaces_harmonised.rds")
+if (!file.exists(f_mc)) {
+  mc  <- fread(get_raw("MEGA_CES"), select = c("hm_rsid", "hm_chrom", "hm_pos", "hm_other_allele", "hm_effect_allele",
+                                               "hm_beta", "hm_effect_allele_frequency", "standard_error", "p_value"))
+  mc2 <- as.data.frame(mc[hm_rsid %in% exp_dat$SNP]); rm(mc); invisible(gc()); mc2 <- mc2[!duplicated(mc2$hm_rsid), ]
+  cat("Instruments matched by rsID in GCST006910:", nrow(mc2), "of", nrow(exp_dat), "\n")
+  o <- format_data(mc2, type = "outcome", snp_col = "hm_rsid", beta_col = "hm_beta", se_col = "standard_error",
+                   eaf_col = "hm_effect_allele_frequency", effect_allele_col = "hm_effect_allele",
+                   other_allele_col = "hm_other_allele", pval_col = "p_value", chr_col = "hm_chrom", pos_col = "hm_pos")
+  o$outcome <- outcome_short("MEGA_CES"); o$id.outcome <- "GCST006910"
+  saveRDS(harmonise_data(exp_dat, o, action = 2), f_mc)
+}
+b_mc <- run_battery(readRDS(f_mc), "MEGA_CES"); print_battery(b_mc)
+b_mc$res[, c("method", "nsnp", "b", "se", "pval")]
+outs$MEGA_CES <- b_mc$dat
+```
+
+## 6. Atrial fibrillation (AF)
+
+AF is the dominant cardioembolic source, so a CES-specific association could run through AF. AF GWAS: Nielsen et al. 2018
+(GCST006414; 60,620 cases / 970,216 controls; European; includes UK Biobank). Steps: (i) AF instruments = genome-wide
+significant SNPs, one lead SNP per 1-Mb window by positional pruning (no LD reference); (ii) positive control, AF to stroke
+subtypes; (iii) GlycA to AF; (iv) CES with AF-related instruments removed; (v) exploratory product-of-coefficients estimate.
+The joint GlycA + AF multivariable MR needs the OpenGWAS token (`11_reverse_and_af_mvmr_token.qmd`).
+
+```{r af_cache}
+f_ai <- file.path(DIR$proc, "af_instruments.rds"); f_ag <- file.path(DIR$proc, "af_glyca_snps.rds")
+if (!file.exists(f_ai) || !file.exists(f_ag)) {
+  af <- fread(get_raw("AF"), select = c("hm_rsid", "hm_chrom", "hm_pos", "hm_other_allele", "hm_effect_allele", "hm_beta",
+                                        "hm_effect_allele_frequency", "standard_error", "p_value"))
+  af[, p_value := suppressWarnings(as.numeric(p_value))]            # read as character in this file
+  af <- af[!is.na(hm_beta) & !is.na(standard_error) & !is.na(p_value)]
+  saveRDS(af[hm_rsid %in% exp_dat$SNP], f_ag)
+  a <- af[p_value < 5e-8 & grepl("^rs", hm_rsid)]; rm(af); invisible(gc())
+  a[, chr := as.integer(hm_chrom)]; a <- a[!is.na(chr)]; a[, z2 := (hm_beta / standard_error)^2]; setorder(a, -z2)
+  cat("Genome-wide significant AF SNPs before pruning:", nrow(a), "\n")
+  removed <- rep(FALSE, nrow(a)); lead <- integer(0)                # greedy: strongest SNP first, drop neighbours within 500 kb
+  for (i in seq_len(nrow(a))) {
+    if (removed[i]) next
+    lead <- c(lead, i); removed <- removed | (a$chr == a$chr[i] & abs(a$hm_pos - a$hm_pos[i]) <= 500000)
+  }
+  ai <- a[lead][!duplicated(hm_rsid)]; ai[, F := z2]; saveRDS(ai, f_ai)
+}
+af_iv  <- readRDS(f_ai)
+stopifnot(is.numeric(af_iv$p_value), all(af_iv$p_value < 5e-8), !anyDuplicated(af_iv$hm_rsid))   # a stale or mis-filtered cache stops here
+af_gly <- as.data.frame(readRDS(f_ag)); af_gly <- af_gly[!duplicated(af_gly$hm_rsid), ]
+cat("AF lead SNPs (500-kb positional pruning):", nrow(af_iv), "| median F:", round(median(af_iv$F), 1), "\n")
+
+af_exp <- format_data(as.data.frame(af_iv), type = "exposure", snp_col = "hm_rsid", beta_col = "hm_beta", se_col = "standard_error",
+                      eaf_col = "hm_effect_allele_frequency", effect_allele_col = "hm_effect_allele", other_allele_col = "hm_other_allele",
+                      pval_col = "p_value", chr_col = "chr", pos_col = "hm_pos")
+af_exp$exposure <- "Atrial fibrillation (Nielsen 2018)"
+af_exp$samplesize.exposure <- 60620L + 970216L
+```
+
+```{r af_to_stroke}
+rd <- function(k) fread(get_raw(k), select = c("chromosome", "base_pair_location", "effect_allele", "other_allele", "beta",
+                                                "standard_error", "effect_allele_frequency", "p_value", "rsid"))
+getout <- function(dt, ids, name) {
+  d <- as.data.frame(dt[rsid %in% ids]); d <- d[!duplicated(d$rsid), ]
+  o <- format_data(d, type = "outcome", snp_col = "rsid", beta_col = "beta", se_col = "standard_error", eaf_col = "effect_allele_frequency",
+                   effect_allele_col = "effect_allele", other_allele_col = "other_allele", pval_col = "p_value")
+  o$outcome <- name; o
+}
+af_out <- list(CES = getout(rd("CES"), af_exp$SNP, "CES"), LAS = getout(rd("LAS"), af_exp$SNP, "LAS"), SVS = getout(rd("SVS"), af_exp$SNP, "SVS"))
+mcf <- fread(get_raw("MEGA_CES"), select = c("hm_rsid", "hm_other_allele", "hm_effect_allele", "hm_beta", "hm_effect_allele_frequency", "standard_error", "p_value"))
+mcd <- as.data.frame(mcf[hm_rsid %in% af_exp$SNP]); mcd <- mcd[!duplicated(mcd$hm_rsid), ]; rm(mcf)
+af_out$MEGA_CES <- format_data(mcd, type = "outcome", snp_col = "hm_rsid", beta_col = "hm_beta", se_col = "standard_error",
+                               eaf_col = "hm_effect_allele_frequency", effect_allele_col = "hm_effect_allele",
+                               other_allele_col = "hm_other_allele", pval_col = "p_value")
+af_out$MEGA_CES$outcome <- "MEGA_CES"
+afm <- bind_rows(lapply(names(af_out), function(k) {
+  d <- suppressMessages(harmonise_data(af_exp, af_out[[k]], action = 2)); d <- d[d$mr_keep, ]
+  set.seed(SEED); m <- suppressMessages(mr(d)); h <- mr_heterogeneity(d); pl <- mr_pleiotropy_test(d)
+  m$outcome_label <- k; m$Qp <- pick_method(h, "ivw")$Q_pval; m$egger_int_p <- pl$pval; m
+}))
+afm$OR <- exp(afm$b); afm$lci <- exp(afm$b - 1.96 * afm$se); afm$uci <- exp(afm$b + 1.96 * afm$se)
+print(afm[afm$method == M[["ivw"]], c("outcome_label", "nsnp", "OR", "lci", "uci", "pval")], digits = 4)
+```
+
+```{r glyca_to_af}
+af_o <- format_data(af_gly, type = "outcome", snp_col = "hm_rsid", beta_col = "hm_beta", se_col = "standard_error", eaf_col = "hm_effect_allele_frequency",
+                    effect_allele_col = "hm_effect_allele", other_allele_col = "hm_other_allele", pval_col = "p_value", chr_col = "hm_chrom", pos_col = "hm_pos")
+af_o$outcome <- "Atrial fibrillation"
+dga <- suppressMessages(harmonise_data(exp_dat, af_o, action = 2)); dga <- dga[dga$mr_keep, ]
+cat("GlycA instruments usable for AF:", nrow(dga), "of", nrow(exp_dat), "\n")
+set.seed(SEED); mga <- suppressMessages(mr(dga)); hga <- mr_heterogeneity(dga); pga <- mr_pleiotropy_test(dga)
+set.seed(SEED); rp <- raps_fit(dga)
+mga$OR <- exp(mga$b); mga$lci <- exp(mga$b - 1.96 * mga$se); mga$uci <- exp(mga$b + 1.96 * mga$se)
+print(mga[, c("method", "nsnp", "b", "se", "OR", "lci", "uci", "pval")], digits = 4)
+afp <- setNames(dga$pval.outcome, dga$SNP)                          # AF p-value of each GlycA instrument
+```
+
+```{r af_exclusion}
+afloc <- as.data.frame(af_iv)[, c("chr", "hm_pos")]
+exp_dat$near_AF <- mapply(function(chr, pos) any(afloc$chr == as.integer(chr) & abs(afloc$hm_pos - as.numeric(pos)) <= 5e5),
+                          exp_dat$chr.exposure, exp_dat$pos.exposure)
+cat("GlycA instruments within 500 kb of an AF lead SNP:", paste(exp_dat$SNP[exp_dat$near_AF], collapse = ", "), "\n")
+afsens <- bind_rows(lapply(c("CES", "MEGA_CES", "MEGASTROKE", "GIGASTROKE"), function(k) {
+  d <- outs[[k]]; lowp <- names(afp)[afp < 1e-3]; near <- exp_dat$SNP[exp_dat$near_AF]
+  sets <- setNames(list(d, d[!d$SNP %in% lowp, ], d[!d$SNP %in% near, ], d[!d$SNP %in% lowp & !d$SNP %in% near, ]),
+                   c("Primary", unname(SET_LABELS[c("af_p", "af_near", "af_both")])))
+  bind_rows(lapply(names(sets), function(s) est(sets[[s]], k, s)))
+}))
+print(wide(afsens), right = FALSE)
+
+# exploratory product of coefficients (delta-method SE); assumes no GlycA x AF interaction and valid AF instruments
+ba <- pick_method(mga, "ivw")$b; sa <- pick_method(mga, "ivw")$se
+cesx <- afm[afm$outcome_label == "CES" & afm$method == M[["ivw"]], ]; bb <- cesx$b; sb <- cesx$se
+tot <- pick_method(bat$CES$res, "ivw")$b
+ind <- ba * bb; se_ind <- sqrt(bb^2 * sa^2 + ba^2 * sb^2)
+med <- data.frame(total_logOR = tot, a_GlycA_to_AF = ba, a_se = sa, b_AF_to_CES = bb, b_se = sb, indirect = ind, indirect_se = se_ind,
+                  indirect_lci = ind - 1.96 * se_ind, indirect_uci = ind + 1.96 * se_ind, indirect_OR = exp(ind),
+                  prop_mediated = ind / tot, direct_logOR = tot - ind)
+print(t(med), digits = 4)
+```
+
+## 7. Tables S11-S14
+
+```{r tables}
+tidy_tab <- function(df) df %>% mutate(Outcome = outcome_short(outcome), OR_CI = sprintf("%.3f (%.3f-%.3f)", OR, lci, uci), P = signif(pval, 3)) %>%
+  select(Outcome, Analysis_set = set, Method = method, N_SNPs = nsnp, beta, se, OR, CI_lower = lci, CI_upper = uci, OR_CI, P)
+S11 <- bind_rows(tidy_tab(rob), tidy_tab(afsens %>% filter(set != "Primary")), tidy_tab(raps))
+S11 <- S11[!duplicated(S11[, c("Outcome", "Analysis_set", "Method")]), ]
+S11 <- S11 %>% arrange(factor(Outcome, levels = outcome_short(c("MEGASTROKE", "GIGASTROKE", "CES", "MEGA_CES", "LAS", "SVS"))), Analysis_set, Method)
+write.csv(S11, file.path(DIR$tab, "TableS11_robustness_analysis_sets.csv"), row.names = FALSE)
+write.csv(S12, file.path(DIR$tab, "TableS12_leave_one_locus_out_summary.csv"), row.names = FALSE)
+write.csv(loci %>% arrange(locus) %>% select(Locus_ID = locus, Locus = locus_label, N_instruments = n_snps, SNP, chr = chr.exposure, pos_hg19 = pos.exposure, F),
+          file.path(DIR$tab, "TableS12b_locus_definitions.csv"), row.names = FALSE)
+write.csv(llo, file.path(DIR$tab, "TableS12c_leave_one_locus_out_full.csv"), row.names = FALSE)
+
+r4 <- function(df) df %>% mutate(across(any_of(c("beta", "se", "OR", "CI_lower", "CI_upper")), ~ round(.x, 4)))
+full_label <- function(key, name) { m <- outcome_meta(key)
+  sprintf("%s (%s; %s cases / %s controls)", name, m$id, format(m$ncase, big.mark = ","), format(m$ncontrol, big.mark = ",")) }
+S13_lab <- c(full_label("CES", "GIGASTROKE CES"), full_label("MEGA_CES", "MEGASTROKE CES"))
+q_note  <- function(b) sprintf("Q P=%.3f; Egger intercept P=%.3f", pick_method(b$het, "ivw")$Q_pval, b$pleio$pval)
+S13 <- r4(bind_rows(
+  bind_rows(bat$CES$res %>% mutate(Outcome = S13_lab[1]), b_mc$res %>% mutate(Outcome = S13_lab[2])) %>%
+    transmute(Outcome, Method = method, N_SNPs = nsnp, beta = b, se, OR = exp(b), CI_lower = exp(b - 1.96 * se), CI_upper = exp(b + 1.96 * se),
+              P = signif(pval, 3), Note = NA_character_),
+  data.frame(Outcome = S13_lab, Method = "Cochran Q (IVW) / Egger intercept P", N_SNPs = c(nrow(bat$CES$dat), nrow(b_mc$dat)),
+             Note = c(q_note(bat$CES), q_note(b_mc)))))
+write.csv(S13, file.path(DIR$tab, "TableS13_MEGASTROKE_CES_consistency.csv"), row.names = FALSE)
+
+af_methods <- unname(M[c("ivw", "wm", "egger", "simple", "wmode")])
+S14a <- afm %>% filter(method %in% af_methods) %>%
+  transmute(Analysis = "AF -> stroke outcome (positive control)",
+            Exposure = paste0("Atrial fibrillation (Nielsen 2018; ", nrow(af_iv), " positionally pruned lead SNPs)"),
+            Outcome = outcome_label, Method = method, N_SNPs = nsnp, beta = b, se, OR, CI_lower = lci, CI_upper = uci,
+            P = signif(pval, 3), Q_P = signif(Qp, 3), Egger_intercept_P = signif(egger_int_p, 3))
+S14b <- mga %>% transmute(Analysis = "GlycA -> AF", Exposure = "GlycA (60 instruments)", Outcome = "Atrial fibrillation (GCST006414)", Method = method,
+                          N_SNPs = nsnp, beta = b, se, OR, CI_lower = lci, CI_upper = uci, P = signif(pval, 3),
+                          Q_P = signif(pick_method(hga, "ivw")$Q_pval, 3), Egger_intercept_P = signif(pga$pval, 3))
+S14b <- bind_rows(S14b, data.frame(Analysis = "GlycA -> AF", Exposure = "GlycA (60 instruments)", Outcome = "Atrial fibrillation (GCST006414)",
+                                   Method = "MR-RAPS", N_SNPs = nrow(dga), beta = rp$b, se = rp$se, OR = exp(rp$b),
+                                   CI_lower = exp(rp$b - 1.96 * rp$se), CI_upper = exp(rp$b + 1.96 * rp$se), P = signif(rp$pval, 3)))
+write.csv(r4(bind_rows(S14a, S14b)), file.path(DIR$tab, "TableS14_atrial_fibrillation_analyses.csv"), row.names = FALSE)
+write.csv(data.frame(quantity = names(med), value = round(unlist(med[1, ]), 5)), file.path(DIR$tab, "TableS14b_AF_product_of_coefficients.csv"), row.names = FALSE)
+write.csv(S11 %>% filter(grepl("AF", Analysis_set)), file.path(DIR$tab, "TableS14c_CES_excluding_AF_associated_SNPs.csv"), row.names = FALSE)
+saveRDS(list(rob = rob, llo = llo, raps = raps, afsens = afsens, afm = afm, mga = mga, med = med, S11 = S11, S12 = S12, S13 = S13),
+        file.path(DIR$proc, "robustness_summary.rds"))
+```
+
+## 8. Figure S5 - robustness of the cardioembolic estimate
+
+All counts and the statements in the title and subtitle are computed from the results.
+
+```{r figS5}
+G <- outcome_short("CES"); n_ces <- nrow(bat$CES$dat)
+mm   <- S13[S13$Outcome == S13_lab[2] & S13$Method == M[["ivw"]], ]
+core <- bat$CES$res; core <- cbind(core, or_ci(core$b, core$se))
+gv   <- function(m) core[core$method == M[[m]], ]
+sel  <- function(s) S11[S11$Outcome == G & S11$Analysis_set == SET_LABELS[[s]] & S11$Method == "IVW", ][1, ]
+grp_est <- sprintf("Estimator (all %d SNPs)", n_ces)
+rows <- list(
+  c(grp_est, "IVW, random effects (primary)", gv("ivw")$OR, gv("ivw")$OR_lci, gv("ivw")$OR_uci, n_ces),
+  c(grp_est, "Weighted median", gv("wm")$OR, gv("wm")$OR_lci, gv("wm")$OR_uci, n_ces),
+  c(grp_est, "MR-Egger", gv("egger")$OR, gv("egger")$OR_lci, gv("egger")$OR_uci, n_ces),
+  c(grp_est, "MR-RAPS (robust to outliers)", raps$OR[raps$outcome == "CES"], raps$lci[raps$outcome == "CES"], raps$uci[raps$outcome == "CES"], n_ces))
+spec <- c(hp = sprintf("Without HP locus (chr16, %d SNPs)", sum(outs$CES$SNP %in% snps_in(HP_locus))),
+          lpa = sprintf("Without LPA locus (chr6, %d SNPs)", sum(outs$CES$SNP %in% snps_in(LPA_locus))),
+          hlm = "Without HP, LPA and MHC loci", common = sprintf("%d SNPs shared by all five outcomes", length(common)),
+          af_p = "Without SNPs with AF p < 0.001", af_near = "Without SNPs near AF lead SNPs", af_both = "Without either AF-related group")
+for (s in names(spec)) {
+  p <- sel(s); grp <- if (grepl("^af_", s)) "Removing AF-related instruments" else "Removing loci / restricting SNP set"
+  rows[[length(rows) + 1]] <- c(grp, spec[[s]], p$OR, p$CI_lower, p$CI_upper, p$N_SNPs)
+}
+rows[[length(rows) + 1]] <- c("Earlier release (partly overlapping cases)", "MEGASTROKE 2018 CES, IVW", mm$OR, mm$CI_lower, mm$CI_upper, mm$N_SNPs)
+fd <- as.data.frame(do.call(rbind, rows), stringsAsFactors = FALSE); names(fd) <- c("group", "label", "OR", "lci", "uci", "n")
+fd[, c("OR", "lci", "uci", "n")] <- lapply(fd[, c("OR", "lci", "uci", "n")], as.numeric)
+fd$group <- factor(fd$group, levels = unique(fd$group)); fd$label <- factor(fd$label, levels = rev(fd$label))
+fd$txt <- sprintf("%.3f (%.3f-%.3f)  n=%d", fd$OR, fd$lci, fd$uci, fd$n); fd$primary <- fd$label == "IVW, random effects (primary)"
+cesl <- S12[S12$Outcome == "CES", ]
+n_all <- nrow(fd); n_excl <- sum(fd$uci < 1); n_below1 <- sum(fd$OR < 1)
+fig_title <- if (n_below1 == n_all) {
+  sprintf("Cardioembolic estimate points the same way in all %d analyses; the 95%% CI excludes 1 in %d", n_all, n_excl)
+} else {
+  sprintf("Cardioembolic estimate: OR < 1 in %d of %d analyses; the 95%% CI excludes 1 in %d", n_below1, n_all, n_excl)
+}
+fig_sub <- sprintf("Shaded band: range of IVW estimates over %d leave-one-locus-out analyses (OR %.3f-%.3f; P %.3f-%.3f%s)",
+                   cesl$N_loci, cesl$IVW_OR_min, cesl$IVW_OR_max, cesl$P_min, cesl$P_max,
+                   if (cesl$`N_loci_with_P_lt_0.05` == cesl$N_loci) " in every one" else "")
+figS5 <- ggplot(fd, aes(x = OR, y = label)) +
+  annotate("rect", xmin = cesl$IVW_OR_min, xmax = cesl$IVW_OR_max, ymin = -Inf, ymax = Inf, fill = "#2b6a99", alpha = 0.12) +
+  geom_vline(xintercept = 1, linewidth = 0.4, colour = "grey35") +
+  geom_errorbar(aes(xmin = lci, xmax = uci, colour = primary), width = 0, linewidth = 0.7, orientation = "y") +
+  geom_point(aes(colour = primary, size = primary), shape = 15) +
+  geom_text(aes(x = 1.34, label = txt), hjust = 0, size = 2.7, colour = "grey20") +
+  scale_colour_manual(values = c(`TRUE` = "#1b4f72", `FALSE` = "grey45"), guide = "none") +
+  scale_size_manual(values = c(`TRUE` = 2.6, `FALSE` = 1.9), guide = "none") +
+  scale_x_log10(breaks = c(0.7, 0.8, 0.9, 1, 1.2)) + coord_cartesian(xlim = c(0.68, 1.30), clip = "off") +
+  facet_grid(group ~ ., scales = "free_y", space = "free_y", switch = "y") +
+  labs(x = "Odds ratio for cardioembolic stroke per 1-SD higher GlycA (95% CI)", y = NULL, title = fig_title, subtitle = fig_sub) +
+  theme_minimal(base_size = 9) +
+  theme(panel.grid.minor = element_blank(), panel.grid.major.y = element_blank(), strip.placement = "outside",
+        strip.text.y.left = element_text(angle = 0, hjust = 1, face = "plain", size = 8), plot.title = element_text(size = 9.5, hjust = 0, face = "plain"),
+        plot.subtitle = element_text(size = 8, colour = "grey30"), plot.title.position = "plot", plot.margin = margin(6, 110, 6, 6),
+        axis.text.y = element_text(size = 8))
+ggsave(file.path(DIR$fig, "FigureS5_cardioembolic_robustness.png"), figS5, width = 9.2, height = 4.6, dpi = 300)
+ggsave(file.path(DIR$fig, "FigureS5_cardioembolic_robustness.pdf"), figS5, width = 9.2, height = 4.6)
+```

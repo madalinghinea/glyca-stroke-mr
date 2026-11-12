@@ -1,0 +1,6 @@
+"outcome_label","n_tested","n_steiger_true","n_steiger_false","steiger_false_snps","outcome_p_of_false_snps"
+"MEGASTROKE",54,54,0,"",""
+"GIGASTROKE",45,45,0,"",""
+"CES",41,41,0,"",""
+"LAS",33,32,1,"rs10455872","3.6e-07"
+"SVS",33,32,1,"rs62259939","0.00056"

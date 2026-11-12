@@ -1,0 +1,41 @@
+---
+title: "03 - MR vs GIGASTROKE (any ischemic stroke)"
+format: html
+---
+
+GIGASTROKE European ischemic stroke GWAS (`GCST90104540`; 62,100 cases / 1,234,808 controls), not indexed in OpenGWAS.
+`get_raw("GIGASTROKE")` downloads the harmonised GWAS Catalog file (~0.4 GB). Instruments are matched by exact rsID
+(no LD-proxy search), an asymmetry with MEGASTROKE stated as a limitation.
+
+```{r setup}
+source("00_setup.R")
+exp_dat <- readRDS(need_file(file.path(DIR$proc, "exp_dat.rds"), "run 01_extract_exposure.qmd stage A"))
+```
+
+## Stage A - match and harmonise
+
+```{r extract}
+f_h <- file.path(DIR$proc, "dat_gigastroke_harmonised.rds")
+if (RUN_EXTRACTION || !file.exists(f_h)) {
+  full <- fread(get_raw("GIGASTROKE"))
+  sub  <- as.data.frame(full[rsid %in% exp_dat$SNP]); rm(full); invisible(gc())
+  cat("Instruments found by exact rsID:", nrow(sub), "of", nrow(exp_dat), "\n")
+  out_dat <- format_data(sub, type = "outcome", snp_col = "rsid", beta_col = "beta", se_col = "standard_error",
+                         effect_allele_col = "effect_allele", other_allele_col = "other_allele",
+                         eaf_col = "effect_allele_frequency", pval_col = "p_value", chr_col = "chromosome", pos_col = "base_pair_location")
+  out_dat$outcome <- outcome_meta("GIGASTROKE")$label; out_dat$id.outcome <- "GCST90104540"
+  saveRDS(harmonise_data(exposure_dat = exp_dat, outcome_dat = out_dat, action = 2), f_h)
+}
+```
+
+## Stage B - analysis (offline)
+
+```{r analysis}
+dat <- readRDS(f_h)
+cat("Harmonised rows:", nrow(dat), "| retained:", sum(dat$mr_keep), "| removed:", paste(dat$SNP[!dat$mr_keep], collapse = ", "), "\n")
+cat("Instruments absent from GIGASTROKE:", length(setdiff(exp_dat$SNP, dat$SNP)), "\n")
+
+b <- run_battery(dat, "GIGASTROKE")
+print_battery(b)
+b$res; b$het; b$pleio; b$presso_sum
+```

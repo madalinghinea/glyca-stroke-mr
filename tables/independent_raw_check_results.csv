@@ -1,0 +1,32 @@
+check,quantity,python,reported,tolerance,abs_diff,pass
+AF leads,number of AF lead SNPs,132.0,132.0,0.0,0.0,True
+GIGASTROKE harmonisation,SNPs retained,45.0,45.0,0.0,0.0,True
+GIGASTROKE harmonisation,SNPs in one set only,0.0,0.0,0.0,0.0,True
+GIGASTROKE harmonisation,max |beta.outcome difference|,0.0,0.0,0.0001,0.0,True
+CES harmonisation,SNPs retained,41.0,41.0,0.0,0.0,True
+CES harmonisation,SNPs in one set only,0.0,0.0,0.0,0.0,True
+CES harmonisation,max |beta.outcome difference|,0.0,0.0,0.0001,0.0,True
+LAS harmonisation,SNPs retained,33.0,33.0,0.0,0.0,True
+LAS harmonisation,SNPs in one set only,0.0,0.0,0.0,0.0,True
+LAS harmonisation,max |beta.outcome difference|,0.0,0.0,0.0001,0.0,True
+SVS harmonisation,SNPs retained,33.0,33.0,0.0,0.0,True
+SVS harmonisation,SNPs in one set only,0.0,0.0,0.0,0.0,True
+SVS harmonisation,max |beta.outcome difference|,0.0,0.0,0.0001,0.0,True
+AF -> CES,SNPs usable,119.0,119.0,0.0,0.0,True
+AF -> CES,IVW OR,1.905428411392243,1.9054,0.0006,2.8411392243077316e-05,True
+AF -> CES,IVW p (log10),-135.25777935836913,-135.2577463300934,0.01,3.302827573747891e-05,True
+AF -> LAS,SNPs usable,113.0,113.0,0.0,0.0,True
+AF -> LAS,IVW OR,1.0416355985892831,1.0416,0.0006,3.559858928303683e-05,True
+AF -> LAS,IVW p (log10),-0.6133523255137632,-0.6133227160391622,0.01,2.9609474600955643e-05,True
+AF -> SVS,SNPs usable,112.0,112.0,0.0,0.0,True
+AF -> SVS,IVW OR,0.9911733628825017,0.9912,0.0006,2.66371174982849e-05,True
+AF -> SVS,IVW p (log10),-0.1005402878220735,-0.10056254571382243,0.01,2.225789174893633e-05,True
+CES excl. AF p < 1e-3,SNPs,38.0,38.0,0.0,0.0,True
+CES excl. AF p < 1e-3,IVW OR,0.8838799817735906,0.883879981773591,0.0006,3.3306690738754696e-16,True
+CES excl. AF p < 1e-3,IVW p,0.05501528030290629,0.055,0.0006,1.528030290628979e-05,True
+CES excl. near AF lead,SNPs,39.0,39.0,0.0,0.0,True
+CES excl. near AF lead,IVW OR,0.8453107827331651,0.845310782733165,0.0006,1.1102230246251565e-16,True
+CES excl. near AF lead,IVW p,0.00867593503509796,0.00868,0.0006,4.064964902040016e-06,True
+CES excl. both,SNPs,36.0,36.0,0.0,0.0,True
+CES excl. both,IVW OR,0.8762138566189072,0.876213856618907,0.0006,1.1102230246251565e-16,True
+CES excl. both,IVW p,0.04342264667667072,0.0434,0.0006,2.2646676670720622e-05,True

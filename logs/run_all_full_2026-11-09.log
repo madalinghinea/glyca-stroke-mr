@@ -1,0 +1,264 @@
+# Full offline run of run_all.R, 2026-11-09 (MR-PRESSO 10,000 simulations; step 11 added afterwards and run separately)
+Run started: 2026-11-09 14:12:23 
+
+########  01_extract_exposure.qmd  ########
+Instruments: 60 | F: min 26.6, mean 97.6, max 986.2 | variance explained (sum of per-SNP R2): 5.03%
+Instruments with F < 30: 5; strongest instrument: rs77303550 (F = 986.2, chr16:72079657)
+-- 01_extract_exposure.qmd finished (0.0 min)
+
+########  02_outcome_megastroke.qmd  ########
+Harmonised rows: 56 | retained (mr_keep): 54 | removed: rs1561748, rs56001710 
+Instruments absent from the outcome (no proxy found): rs687621, rs71435622, rs370692925, rs11429307 
+
+[MEGASTROKE] 54 SNPs | IVW OR 0.979 (0.901-1.064), p = 0.623
+  Cochran Q (IVW) p = 0.011 | Egger intercept 0.0085, p = 0.048
+  MR-PRESSO global p = 0.016 | outliers: rs72801474
+  Steiger FALSE: none
+  id.exposure       id.outcome                                outcome                               exposure                    method nsnp           b         se       pval
+1 met-d-GlycA ebi-a-GCST006908 Ischemic stroke || id:ebi-a-GCST006908 Glycoprotein acetyls || id:met-d-GlycA                  MR Egger   54 -0.14036768 0.07192596 0.05638665
+2 met-d-GlycA ebi-a-GCST006908 Ischemic stroke || id:ebi-a-GCST006908 Glycoprotein acetyls || id:met-d-GlycA           Weighted median   54 -0.06311899 0.05615983 0.26104822
+3 met-d-GlycA ebi-a-GCST006908 Ischemic stroke || id:ebi-a-GCST006908 Glycoprotein acetyls || id:met-d-GlycA Inverse variance weighted   54 -0.02085381 0.04237473 0.62262857
+4 met-d-GlycA ebi-a-GCST006908 Ischemic stroke || id:ebi-a-GCST006908 Glycoprotein acetyls || id:met-d-GlycA               Simple mode   54 -0.14506870 0.09193017 0.12050898
+5 met-d-GlycA ebi-a-GCST006908 Ischemic stroke || id:ebi-a-GCST006908 Glycoprotein acetyls || id:met-d-GlycA             Weighted mode   54 -0.06163073 0.05084135 0.23080574
+  id.exposure       id.outcome                                outcome                               exposure                    method        Q Q_df     Q_pval
+1 met-d-GlycA ebi-a-GCST006908 Ischemic stroke || id:ebi-a-GCST006908 Glycoprotein acetyls || id:met-d-GlycA                  MR Egger 73.45519   52 0.02665994
+2 met-d-GlycA ebi-a-GCST006908 Ischemic stroke || id:ebi-a-GCST006908 Glycoprotein acetyls || id:met-d-GlycA Inverse variance weighted 79.25786   53 0.01122056
+  id.exposure       id.outcome                                outcome                               exposure egger_intercept          se       pval
+1 met-d-GlycA ebi-a-GCST006908 Ischemic stroke || id:ebi-a-GCST006908 Glycoprotein acetyls || id:met-d-GlycA     0.008493739 0.004190776 0.04782788
+  global_rss global_p n_outliers outlier_snps distortion_p       raw_b     raw_se     raw_p      corr_b    corr_se   corr_p
+1   81.24772   0.0158          1   rs72801474       0.8129 -0.02085381 0.04237473 0.6246609 -0.03068958 0.03932548 0.438694
+Smallest outcome P among instruments: 0.000451 
+-- 02_outcome_megastroke.qmd finished (9.3 min)
+
+########  03_outcome_gigastroke.qmd  ########
+Harmonised rows: 46 | retained: 45 | removed at harmonisation: rs1561748 
+Instruments absent from GIGASTROKE: 14 
+
+[GIGASTROKE] 45 SNPs | IVW OR 0.970 (0.893-1.053), p = 0.463
+  Cochran Q (IVW) p = 8.7e-08 | Egger intercept 0.0044, p = 0.297
+  MR-PRESSO global p = <1e-04 | outliers: rs72801474
+  Steiger FALSE: none
+  id.exposure   id.outcome                      outcome                               exposure                    method nsnp           b         se       pval
+1 met-d-GlycA GCST90104540 Ischemic stroke (GIGASTROKE) Glycoprotein acetyls || id:met-d-GlycA                  MR Egger   45 -0.09303218 0.07229043 0.20500623
+2 met-d-GlycA GCST90104540 Ischemic stroke (GIGASTROKE) Glycoprotein acetyls || id:met-d-GlycA           Weighted median   45 -0.06422404 0.04453768 0.14929792
+3 met-d-GlycA GCST90104540 Ischemic stroke (GIGASTROKE) Glycoprotein acetyls || id:met-d-GlycA Inverse variance weighted   45 -0.03078055 0.04190174 0.46258998
+4 met-d-GlycA GCST90104540 Ischemic stroke (GIGASTROKE) Glycoprotein acetyls || id:met-d-GlycA               Simple mode   45  0.17900383 0.10466015 0.09424762
+5 met-d-GlycA GCST90104540 Ischemic stroke (GIGASTROKE) Glycoprotein acetyls || id:met-d-GlycA             Weighted mode   45 -0.07324406 0.04277693 0.09389426
+  id.exposure   id.outcome                      outcome                               exposure                    method        Q Q_df       Q_pval
+1 met-d-GlycA GCST90104540 Ischemic stroke (GIGASTROKE) Glycoprotein acetyls || id:met-d-GlycA                  MR Egger 108.7624   43 1.297213e-07
+2 met-d-GlycA GCST90104540 Ischemic stroke (GIGASTROKE) Glycoprotein acetyls || id:met-d-GlycA Inverse variance weighted 111.5834   44 8.665778e-08
+  id.exposure   id.outcome                      outcome                               exposure egger_intercept          se     pval
+1 met-d-GlycA GCST90104540 Ischemic stroke (GIGASTROKE) Glycoprotein acetyls || id:met-d-GlycA     0.004371686 0.004139608 0.296837
+  global_rss global_p n_outliers outlier_snps distortion_p       raw_b     raw_se     raw_p      corr_b    corr_se    corr_p
+1   117.7702   <1e-04          1   rs72801474       0.8618 -0.03078055 0.04190174 0.4664871 -0.04022587 0.03893687 0.3073306
+-- 03_outcome_gigastroke.qmd finished (7.8 min)
+
+########  08_subtype_gigastroke.qmd  ########
+CES : harmonised rows 42 | retained 41 
+
+[CES] 41 SNPs | IVW OR 0.853 (0.754-0.966), p = 0.012
+  Cochran Q (IVW) p = 0.761 | Egger intercept -0.0041, p = 0.513
+  MR-PRESSO global p = 0.802 | outliers: none
+  Steiger FALSE: none
+LAS : harmonised rows 34 | retained 33 
+
+[LAS] 33 SNPs | IVW OR 1.013 (0.761-1.349), p = 0.930
+  Cochran Q (IVW) p = 7.7e-07 | Egger intercept 0.0193, p = 0.170
+  MR-PRESSO global p = <1e-04 | outliers: rs10455872;rs2294915;rs7697204
+  Steiger FALSE: rs10455872
+SVS : harmonised rows 34 | retained 33 
+
+[SVS] 33 SNPs | IVW OR 1.091 (0.884-1.346), p = 0.417
+  Cochran Q (IVW) p = 0.014 | Egger intercept 0.0131, p = 0.201
+  MR-PRESSO global p = 0.023 | outliers: rs62259939
+  Steiger FALSE: rs62259939
+-- 08_subtype_gigastroke.qmd finished (18.1 min)
+
+########  04_mvmr.qmd  ########
+MVMR instruments (SNPs): 446 
+                                exposure nsnp          b         se         pval
+1         body mass index || id:ieu-b-40  446 0.14270422 0.04263754 0.0008171619
+2    smoking initiation || id:ieu-b-4877  446 0.08593470 0.07053251 0.2230833633
+3 Glycoprotein acetyls || id:met-d-GlycA  446 0.01646064 0.04875497 0.7356497564
+
+Conditional F-statistics for instrument strength
+
+            exposure1 exposure2 exposure3
+F-statistic  23.74786   5.01698  8.259854
+Q-Statistic for instrument validity:
+618.5364 on 443 DF , p-value: 6.393299e-08
+   ieu-b-40  ieu-b-4877 met-d-GlycA 
+  23.747860    5.016980    8.259854 
+Q_A = 618.54 on 443 df, p = 6.4e-08
+
+Conditional F-statistics for instrument strength
+
+            exposure1 exposure2
+F-statistic  8.291532  48.52281
+Q-Statistic for instrument validity:
+621.087 on 444 DF , p-value: 5.220665e-08
+
+Conditional F-statistics for instrument strength
+
+            exposure1 exposure2
+F-statistic  8.665496  5.527544
+Q-Statistic for instrument validity:
+632.8034 on 444 DF , p-value: 8.893854e-09
+
+Conditional F-statistics for instrument strength
+
+            exposure1 exposure2 exposure3
+F-statistic  23.74786   5.01698  8.259854
+Q-Statistic for instrument validity:
+618.5364 on 443 DF , p-value: 6.393299e-08
+                               model n_snps GlycA_beta GlycA_se GlycA_p GlycA_OR GlycA_OR_lci GlycA_OR_uci GlycA_conditional_F BMI_conditional_F smoking_conditional_F
+1          GlycA alone (446-SNP set)    446     0.0767   0.0472   0.105     1.08        0.984         1.18                  NA                NA                    NA
+2                        GlycA + BMI    446     0.0194   0.0487   0.691     1.02        0.927         1.12                8.29              48.5                    NA
+3                    GlycA + smoking    446     0.0609   0.0474   0.200     1.06        0.968         1.17                8.67                NA                  5.53
+4 GlycA + BMI + smoking (manuscript)    446     0.0165   0.0488   0.736     1.02        0.924         1.12                8.26              23.7                  5.02
+-- 04_mvmr.qmd finished (0.0 min)
+
+########  07_power.qmd  ########
+                                                 [,1]         [,2]         [,3]      [,4]      [,5]     
+outcome                                          "MEGASTROKE" "GIGASTROKE" "CES"     "LAS"     "SVS"    
+N_cases                                          "34217"      "62100"      "10804"   " 6399"   " 6811"  
+N_controls                                       " 406111"    "1234808"    "1234808" "1234808" "1234808"
+n_snp_retained                                   "54"         "45"         "41"      "33"      "33"     
+R2_retained_snps                                 "0.0483"     "0.0417"     "0.0373"  "0.0335"  "0.0293" 
+IVW_SE_idealised_Brion                           "0.0256"     "0.0201"     "0.0500"  "0.0684"  "0.0709" 
+IVW_SE_fixed_effect_from_data                    "0.0347"     "0.0263"     "0.0630"  "0.0892"  "0.0839" 
+random_effects_inflation                         "1.22"       "1.59"       "1.00"    "1.64"    "1.28"   
+IVW_SE_observed                                  "0.0424"     "0.0419"     "0.0630"  "0.1462"  "0.1072" 
+median_ratio_observed_to_expected_SNP_outcome_SE "1.32"       "1.26"       "1.21"    "1.24"    "1.18"   
+MDE80_idealised_low                              "0.931"      "0.945"      "0.869"   "0.826"   "0.820"  
+MDE80_idealised_high                             "1.074"      "1.058"      "1.150"   "1.211"   "1.220"  
+MDE80_empirical_low                              "0.888"      "0.889"      "0.838"   "0.664"   "0.741"  
+MDE80_empirical_high                             "1.126"      "1.125"      "1.193"   "1.506"   "1.350"  
+power_at_OR_1.10_empirical                       "0.614"      "0.623"      "0.328"   "0.100"   "0.144"  
+power_at_OR_0.90_empirical                       "0.701"      "0.710"      "0.387"   "0.111"   "0.166"  
+IVW_OR_95CI_lower                                "0.901"      "0.893"      "0.754"   "0.761"   "0.884"  
+IVW_OR_95CI_upper                                "1.064"      "1.053"      "0.966"   "1.349"   "1.346"  
+-- 07_power.qmd finished (0.0 min)
+
+########  09_robustness.qmd  ########
+No instrument reaches P < 5e-8 for any outcome: smallest outcome P = 3.61e-07 
+Loci: 47 | multi-SNP loci:
+# A tibble: 7 × 3
+  locus locus_label            n_snps
+  <int> <chr>                   <int>
+1    10 chr11:116.65-116.92 Mb      2
+2    14 chr14:94.84-94.85 Mb        2
+3    16 chr16:71.58-72.85 Mb        6
+4    21 chr19:50.02-50.16 Mb        3
+5    38 chr6:160.54-161.01 Mb       3
+6    40 chr7:72.82-73.04 Mb         2
+7    42 chr8:19.73-19.82 Mb         2
+SNPs retained in all five outcomes: 31 
+  set                                       MEGASTROKE                       GIGASTROKE                       CES                                LAS                              SVS                             
+1 Primary (all retained SNPs)               0.979 (0.901-1.064) p=0.623 n=54 0.970 (0.893-1.053) p=0.463 n=45 0.853 (0.754-0.966) p=0.0118 n=41  1.013 (0.761-1.349) p=0.93 n=33  1.091 (0.884-1.346) p=0.417 n=33
+2 Excluding HP locus (chr16 71.6-72.9 Mb)   1.003 (0.912-1.103) p=0.949 n=48 1.010 (0.919-1.111) p=0.833 n=40 0.843 (0.727-0.977) p=0.023 n=37   1.120 (0.799-1.570) p=0.51 n=32  1.139 (0.879-1.476) p=0.324 n=31
+3 Excluding LPA locus (chr6 160.5-161.0 Mb) 0.993 (0.913-1.080) p=0.871 n=51 0.984 (0.907-1.068) p=0.701 n=42 0.871 (0.767-0.987) p=0.0311 n=38  1.085 (0.847-1.391) p=0.518 n=31 1.086 (0.875-1.347) p=0.455 n=32
+4 Excluding HP + LPA + MHC loci             1.013 (0.917-1.118) p=0.805 n=43 1.034 (0.943-1.135) p=0.477 n=37 0.867 (0.744-1.009) p=0.0652 n=34  1.240 (0.931-1.651) p=0.142 n=30 1.133 (0.867-1.481) p=0.361 n=30
+5 Excluding Steiger-FALSE SNPs              0.979 (0.901-1.064) p=0.623 n=54 0.970 (0.893-1.053) p=0.463 n=45 0.853 (0.754-0.966) p=0.0118 n=41  1.088 (0.852-1.390) p=0.497 n=32 1.060 (0.877-1.281) p=0.549 n=32
+6 Common SNP set across 5 outcomes          0.984 (0.878-1.103) p=0.782 n=31 0.953 (0.867-1.048) p=0.324 n=31 0.833 (0.729-0.952) p=0.00725 n=31 0.999 (0.738-1.354) p=0.997 n=31 1.075 (0.866-1.335) p=0.512 n=31
+     Outcome N_loci IVW_OR_min IVW_OR_max   P_min   P_max N_loci_with_P_lt_0.05 Least_favourable_locus
+1        CES     35     0.8359     0.8705 0.00533 0.03106                    35  chr6:160.54-161.01 Mb
+2 GIGASTROKE     37     0.9569     1.0102 0.30155 0.83335                     0   chr16:71.58-72.85 Mb
+3        LAS     31     0.9680     1.1201 0.51045 0.99995                     0  chr1:221.01-221.01 Mb
+4 MEGASTROKE     42     0.9698     1.0031 0.43516 0.94858                     0   chr16:71.58-72.85 Mb
+5        SVS     31     1.0598     1.1393 0.25854 0.54900                     0    chr3:49.39-49.39 Mb
+     outcome                         set  method nsnp     beta      se     OR    lci    uci    pval
+1 MEGASTROKE Primary (all retained SNPs) MR-RAPS   54 -0.03947 0.04257 0.9613 0.8843 1.0449 0.35377
+2 GIGASTROKE Primary (all retained SNPs) MR-RAPS   45 -0.03278 0.02749 0.9678 0.9170 1.0213 0.23308
+3        CES Primary (all retained SNPs) MR-RAPS   41 -0.15595 0.06524 0.8556 0.7529 0.9723 0.01684
+4        LAS Primary (all retained SNPs) MR-RAPS   33  0.10761 0.09280 1.1136 0.9284 1.3358 0.24622
+5        SVS Primary (all retained SNPs) MR-RAPS   33  0.07698 0.10923 1.0800 0.8719 1.3379 0.48095
+
+[MEGA_CES] 51 SNPs | IVW OR 0.907 (0.794-1.036), p = 0.150
+  Cochran Q (IVW) p = 0.925 | Egger intercept -0.0049, p = 0.476
+  MR-PRESSO global p = 0.930 | outliers: none
+  Steiger FALSE: none
+                     method nsnp           b         se      pval
+1                  MR Egger   51 -0.02709305 0.11951029 0.8215997
+2           Weighted median   51 -0.11451381 0.10409077 0.2712737
+3 Inverse variance weighted   51 -0.09773597 0.06783069 0.1496182
+4               Simple mode   51 -0.25763395 0.19029205 0.1818606
+5             Weighted mode   51 -0.12105200 0.10265570 0.2438978
+AF lead SNPs (500-kb positional pruning): 130 | median F: 45.1 
+   outcome_label nsnp     OR    lci   uci       pval
+3            CES  120 1.8927 1.7994 1.991 3.681e-135
+8            LAS  115 1.0436 0.9728 1.120  2.338e-01
+13           SVS  114 0.9938 0.9302 1.062  8.531e-01
+18      MEGA_CES  123 1.9650 1.8393 2.099  3.660e-89
+GlycA instruments usable for AF: 54 of 60 
+                     method nsnp         b      se     OR    lci   uci   pval
+1                  MR Egger   54  0.018347 0.06701 1.0185 0.8932 1.161 0.7853
+2           Weighted median   54 -0.014061 0.03462 0.9860 0.9213 1.055 0.6847
+3 Inverse variance weighted   54 -0.050274 0.03866 0.9510 0.8816 1.026 0.1934
+4               Simple mode   54  0.009605 0.05949 1.0097 0.8985 1.135 0.8724
+5             Weighted mode   54 -0.009351 0.03144 0.9907 0.9315 1.054 0.7673
+GlycA instruments within 500 kb of an AF lead SNP: rs117155836, rs151083835, rs687621 
+  set                                            CES                                MEGA_CES                         MEGASTROKE                       GIGASTROKE                      
+1 Primary                                        0.853 (0.754-0.966) p=0.0118 n=41  0.907 (0.794-1.036) p=0.15 n=51  0.979 (0.901-1.064) p=0.623 n=54 0.970 (0.893-1.053) p=0.463 n=45
+2 Excluding SNPs with AF p < 1e-3                0.884 (0.779-1.003) p=0.055 n=38   0.920 (0.804-1.054) p=0.229 n=48 0.987 (0.907-1.074) p=0.76 n=51  0.983 (0.906-1.067) p=0.687 n=42
+3 Excluding SNPs within 500 kb of an AF lead SNP 0.845 (0.746-0.958) p=0.00868 n=39 0.902 (0.789-1.032) p=0.134 n=49 0.984 (0.907-1.067) p=0.699 n=52 0.975 (0.898-1.058) p=0.542 n=43
+4 Excluding both                                 0.876 (0.771-0.996) p=0.0434 n=36  0.916 (0.799-1.050) p=0.208 n=46 0.992 (0.913-1.078) p=0.849 n=49 0.989 (0.912-1.073) p=0.793 n=40
+                  [,1]
+total_logOR   -0.15855
+a_GlycA_to_AF -0.05027
+a_se           0.03866
+b_AF_to_CES    0.63800
+b_se           0.02579
+indirect      -0.03207
+indirect_se    0.02470
+indirect_lci  -0.08048
+indirect_uci   0.01633
+indirect_OR    0.96843
+prop_mediated  0.20230
+direct_logOR  -0.12647
+-- 09_robustness.qmd finished (9.1 min)
+
+########  06_tables.qmd  ########
+  outcome_label                    method nsnp           b         se      pval        or  or_lci95 or_uci95
+3    MEGASTROKE Inverse variance weighted   54 -0.02085381 0.04237473 0.6226286 0.9793621 0.9013080 1.064176
+8    GIGASTROKE Inverse variance weighted   45 -0.03078055 0.04190174 0.4625900 0.9696884 0.8932329 1.052688
+  outcome_label global_p n_outliers                   outlier_snps distortion_p
+1    MEGASTROKE   0.0158          1                     rs72801474       0.8129
+2    GIGASTROKE   <1e-04          1                     rs72801474       0.8618
+3           CES   0.8022          0                                          NA
+4           LAS   <1e-04          3 rs10455872;rs2294915;rs7697204       0.7712
+5           SVS    0.023          1                     rs62259939       0.4920
+  outcome_label n_tested n_steiger_true n_steiger_false steiger_false_snps outcome_p_of_false_snps
+1    MEGASTROKE       54             54               0                                           
+2    GIGASTROKE       45             45               0                                           
+3           CES       41             41               0                                           
+4           LAS       33             32               1         rs10455872                 3.6e-07
+5           SVS       33             32               1         rs62259939                 0.00056
+   subtype                    method nsnp           b         se       pval        or  or_lci95  or_uci95
+3      CES Inverse variance weighted   41 -0.15854855 0.06299766 0.01184472 0.8533815 0.7542556 0.9655348
+8      LAS Inverse variance weighted   33  0.01280976 0.14621262 0.93018628 1.0128922 0.7605093 1.3490309
+13     SVS Inverse variance weighted   33  0.08706294 0.10716953 0.41657061 1.0909653 0.8842731 1.3459704
+-- 06_tables.qmd finished (0.0 min)
+
+########  05_figures.qmd  ########
+         key    OR   lci   uci      p  n
+1 GIGASTROKE 0.970 0.893 1.053 0.4626 45
+2        CES 0.853 0.754 0.966 0.0118 41
+3        LAS 1.013 0.761 1.349 0.9302 33
+4        SVS 1.091 0.884 1.346 0.4166 33
+-- 05_figures.qmd finished (0.1 min)
+
+Run ended: 2026-11-09 14:56:44 
+--- stderr ---
+Analysing 'met-d-GlycA' on 'ebi-a-GCST006908'
+Analysing 'met-d-GlycA' on 'GCST90104540'
+Analysing 'met-d-GlycA' on 'GCST90104541'
+Analysing 'met-d-GlycA' on 'GCST90104542'
+Analysing 'met-d-GlycA' on 'GCST90104543'
+Analysing 'met-d-GlycA' on 'GCST006910'
+No phenotype name specified, defaulting to 'exposure'.
+No phenotype name specified, defaulting to 'outcome'.
+No phenotype name specified, defaulting to 'outcome'.
+No phenotype name specified, defaulting to 'outcome'.
+No phenotype name specified, defaulting to 'outcome'.
+No phenotype name specified, defaulting to 'outcome'.

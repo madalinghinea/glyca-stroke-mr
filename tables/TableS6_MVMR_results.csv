@@ -1,0 +1,4 @@
+"id.exposure","exposure","id.outcome","outcome","nsnp","b","se","pval","OR","OR_lci","OR_uci"
+"ieu-b-40","body mass index || id:ieu-b-40","ebi-a-GCST006908","Ischemic stroke || id:ebi-a-GCST006908",446,0.1427,0.0426,0.000817161916713005,1.1534,1.0609,1.2539
+"ieu-b-4877","smoking initiation || id:ieu-b-4877","ebi-a-GCST006908","Ischemic stroke || id:ebi-a-GCST006908",446,0.0859,0.0705,0.223083363277671,1.0897,0.949,1.2513
+"met-d-GlycA","Glycoprotein acetyls || id:met-d-GlycA","ebi-a-GCST006908","Ischemic stroke || id:ebi-a-GCST006908",446,0.0165,0.0488,0.735649756361223,1.0166,0.9239,1.1185

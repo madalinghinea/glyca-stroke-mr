@@ -1,0 +1,24 @@
+Check,Reported_R,Python,Abs_diff,Tolerance,Pass
+GlycA: causal estimate (log odds),0.0165,0.01646,3.936e-05,0.0001,True
+GlycA: standard error,0.0488,0.04875,4.503e-05,0.0001,True
+GlycA: p-value,0.7356,0.7356,4.441e-16,0.0001,True
+GlycA: conditional F,8.26,8.26,0.0001459,0.006,True
+BMI: causal estimate (log odds),0.1427,0.1427,4.225e-06,0.0001,True
+BMI: standard error,0.0426,0.04264,3.754e-05,0.0001,True
+BMI: p-value,0.0008172,0.0008172,1.193e-17,0.0001,True
+BMI: conditional F,23.75,23.75,0.00214,0.006,True
+Smoking initiation: causal estimate (log odds),0.0859,0.08593,3.47e-05,0.0001,True
+Smoking initiation: standard error,0.0705,0.07053,3.251e-05,0.0001,True
+Smoking initiation: p-value,0.2231,0.2231,2.776e-17,0.0001,True
+Smoking initiation: conditional F,5.02,5.017,0.00302,0.006,True
+Q_A,618.5,618.5,0.003608,0.006,True
+"CES, GlycA + AF, sigma < 1: GlycA: causal estimate (log odds)",-0.1343358,-0.1343358043982153,4.398215291967489e-09,1e-06,True
+"CES, GlycA + AF, sigma < 1: GlycA: standard error",0.05855078,0.05855077996338267,3.6617327225929586e-11,1e-06,True
+"CES, GlycA + AF, sigma < 1: GlycA: conditional F",32.35035,32.35035397937001,3.979370013951211e-06,0.001,True
+"CES, GlycA + AF, sigma < 1: GlycA: p-value (relative difference)",0.02177058,0.021770576812133034,1.464300430641039e-07,0.0001,True
+"CES, GlycA + AF, sigma < 1: AF: causal estimate (log odds)",0.6537875,0.6537875008741055,8.741055657068841e-10,1e-06,True
+"CES, GlycA + AF, sigma < 1: AF: standard error",0.02283289,0.02283288631898667,3.6810133309528315e-09,1e-06,True
+"CES, GlycA + AF, sigma < 1: AF: conditional F",71.3362,71.33620086091545,8.609154491523441e-07,0.001,True
+"CES, GlycA + AF, sigma < 1: AF: p-value (relative difference)",2.56638e-180,2.566380135648796e-180,5.2856083629757234e-08,0.0001,True
+"CES, GlycA + AF: Q_A",108.3767,108.37674099778437,4.099778436739143e-05,0.001,True
+"CES, GlycA + AF: Q_A p-value",0.9491208,0.9491207919179874,8.082012614707423e-09,1e-06,True

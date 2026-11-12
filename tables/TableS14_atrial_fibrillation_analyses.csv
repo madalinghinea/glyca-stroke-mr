@@ -1,0 +1,27 @@
+"Analysis","Exposure","Outcome","Method","N_SNPs","beta","se","OR","CI_lower","CI_upper","P","Q_P","Egger_intercept_P"
+"AF -> stroke outcome (positive control)","Atrial fibrillation (Nielsen 2018; 132 positionally pruned lead SNPs)","CES","MR Egger",119,0.7884,0.0473,2.1999,2.0053,2.4134,1.02e-32,0.117,0.000517
+"AF -> stroke outcome (positive control)","Atrial fibrillation (Nielsen 2018; 132 positionally pruned lead SNPs)","CES","Weighted median",119,0.692,0.0425,1.9978,1.8382,2.1712,1.12e-59,0.117,0.000517
+"AF -> stroke outcome (positive control)","Atrial fibrillation (Nielsen 2018; 132 positionally pruned lead SNPs)","CES","Inverse variance weighted",119,0.6447,0.026,1.9054,1.8108,2.005,5.52e-136,0.117,0.000517
+"AF -> stroke outcome (positive control)","Atrial fibrillation (Nielsen 2018; 132 positionally pruned lead SNPs)","CES","Simple mode",119,0.6137,0.0995,1.8473,1.5202,2.2449,9.86e-09,0.117,0.000517
+"AF -> stroke outcome (positive control)","Atrial fibrillation (Nielsen 2018; 132 positionally pruned lead SNPs)","CES","Weighted mode",119,0.7205,0.0465,2.0555,1.8763,2.2519,3.44e-30,0.117,0.000517
+"AF -> stroke outcome (positive control)","Atrial fibrillation (Nielsen 2018; 132 positionally pruned lead SNPs)","LAS","MR Egger",113,-0.0223,0.0676,0.9779,0.8565,1.1165,0.742,0.177,0.278
+"AF -> stroke outcome (positive control)","Atrial fibrillation (Nielsen 2018; 132 positionally pruned lead SNPs)","LAS","Weighted median",113,0.0387,0.0652,1.0395,0.9148,1.1811,0.553,0.177,0.278
+"AF -> stroke outcome (positive control)","Atrial fibrillation (Nielsen 2018; 132 positionally pruned lead SNPs)","LAS","Inverse variance weighted",113,0.0408,0.035,1.0416,0.9726,1.1156,0.244,0.177,0.278
+"AF -> stroke outcome (positive control)","Atrial fibrillation (Nielsen 2018; 132 positionally pruned lead SNPs)","LAS","Simple mode",113,-0.0703,0.1362,0.9321,0.7137,1.2174,0.607,0.177,0.278
+"AF -> stroke outcome (positive control)","Atrial fibrillation (Nielsen 2018; 132 positionally pruned lead SNPs)","LAS","Weighted mode",113,0.0451,0.0659,1.0461,0.9194,1.1904,0.495,0.177,0.278
+"AF -> stroke outcome (positive control)","Atrial fibrillation (Nielsen 2018; 132 positionally pruned lead SNPs)","SVS","MR Egger",112,-0.0407,0.0657,0.9602,0.8442,1.0921,0.537,0.0641,0.573
+"AF -> stroke outcome (positive control)","Atrial fibrillation (Nielsen 2018; 132 positionally pruned lead SNPs)","SVS","Weighted median",112,0.0048,0.0566,1.0049,0.8993,1.1228,0.932,0.0641,0.573
+"AF -> stroke outcome (positive control)","Atrial fibrillation (Nielsen 2018; 132 positionally pruned lead SNPs)","SVS","Inverse variance weighted",112,-0.0089,0.0338,0.9912,0.9276,1.0591,0.793,0.0641,0.573
+"AF -> stroke outcome (positive control)","Atrial fibrillation (Nielsen 2018; 132 positionally pruned lead SNPs)","SVS","Simple mode",112,0.0231,0.1053,1.0233,0.8326,1.2578,0.827,0.0641,0.573
+"AF -> stroke outcome (positive control)","Atrial fibrillation (Nielsen 2018; 132 positionally pruned lead SNPs)","SVS","Weighted mode",112,-0.0093,0.0522,0.9907,0.8944,1.0974,0.858,0.0641,0.573
+"AF -> stroke outcome (positive control)","Atrial fibrillation (Nielsen 2018; 132 positionally pruned lead SNPs)","MEGA_CES","MR Egger",125,0.8566,0.0618,2.355,2.0864,2.6583,6.89e-27,0.005,0.00137
+"AF -> stroke outcome (positive control)","Atrial fibrillation (Nielsen 2018; 132 positionally pruned lead SNPs)","MEGA_CES","Weighted median",125,0.7776,0.0483,2.1761,1.9797,2.3921,2.23e-58,0.005,0.00137
+"AF -> stroke outcome (positive control)","Atrial fibrillation (Nielsen 2018; 132 positionally pruned lead SNPs)","MEGA_CES","Inverse variance weighted",125,0.6835,0.0333,1.9807,1.8557,2.1141,7.92e-94,0.005,0.00137
+"AF -> stroke outcome (positive control)","Atrial fibrillation (Nielsen 2018; 132 positionally pruned lead SNPs)","MEGA_CES","Simple mode",125,0.7512,0.1095,2.1195,1.7101,2.627,2.91e-10,0.005,0.00137
+"AF -> stroke outcome (positive control)","Atrial fibrillation (Nielsen 2018; 132 positionally pruned lead SNPs)","MEGA_CES","Weighted mode",125,0.7861,0.0582,2.1949,1.9583,2.4601,4.01e-26,0.005,0.00137
+"GlycA -> AF","GlycA (60 instruments)","Atrial fibrillation (GCST006414)","MR Egger",54,0.0183,0.067,1.0185,0.8932,1.1615,0.785,2.69e-11,0.217
+"GlycA -> AF","GlycA (60 instruments)","Atrial fibrillation (GCST006414)","Weighted median",54,-0.0141,0.0346,0.986,0.9213,1.0553,0.685,2.69e-11,0.217
+"GlycA -> AF","GlycA (60 instruments)","Atrial fibrillation (GCST006414)","Inverse variance weighted",54,-0.0503,0.0387,0.951,0.8816,1.0258,0.193,2.69e-11,0.217
+"GlycA -> AF","GlycA (60 instruments)","Atrial fibrillation (GCST006414)","Simple mode",54,0.0096,0.0595,1.0097,0.8985,1.1345,0.872,2.69e-11,0.217
+"GlycA -> AF","GlycA (60 instruments)","Atrial fibrillation (GCST006414)","Weighted mode",54,-0.0094,0.0314,0.9907,0.9315,1.0537,0.767,2.69e-11,0.217
+"GlycA -> AF","GlycA (60 instruments)","Atrial fibrillation (GCST006414)","MR-RAPS",54,-0.0107,0.0238,0.9893,0.9442,1.0366,0.652,NA,NA

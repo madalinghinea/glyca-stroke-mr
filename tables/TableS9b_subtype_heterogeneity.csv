@@ -1,0 +1,7 @@
+"subtype","method","Q","Q_df","Q_pval"
+"CES","MR Egger",32.9509,39,0.7412921521409
+"CES","Inverse variance weighted",33.3863,40,0.760817043091921
+"LAS","MR Egger",80.8913,31,2.47713502611586e-06
+"LAS","Inverse variance weighted",86.0381,32,7.65986941376976e-07
+"SVS","MR Egger",49.4745,31,0.0189029714165874
+"SVS","Inverse variance weighted",52.1969,32,0.0135378654622943

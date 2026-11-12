@@ -1,0 +1,100 @@
+---
+title: "08 - Supplementary tables S1-S7b, S9a-e and S10"
+format: html
+---
+
+Table S8 is written by `06_power.qmd`; Tables S11-S14 by `07_robustness.qmd`. Numbering follows the manuscript.
+
+```{r setup}
+source("00_setup.R")
+exp_dat <- readRDS(need_file(file.path(DIR$proc, "exp_dat.rds"), "run 01_extract_exposure.qmd stage A"))
+bat <- load_batteries()
+mvo <- readRDS(need_file(file.path(DIR$proc, "mvmr_summary.rds"), "run 05_mvmr.qmd"))
+rnd <- function(df, cols, k = 4) { df[cols] <- lapply(df[cols], function(x) round(x, k)); df }
+wr  <- function(df, f) write.csv(df, file.path(DIR$tab, f), row.names = FALSE)
+```
+
+## Table S1 - exposure instruments
+
+```{r s1}
+s1 <- exp_dat[, c("SNP", "chr.exposure", "pos.exposure", "effect_allele.exposure", "other_allele.exposure", "eaf.exposure",
+                  "beta.exposure", "se.exposure", "pval.exposure")]
+names(s1) <- c("SNP", "chr", "pos_hg19", "effect_allele", "other_allele", "eaf", "beta_SD", "se", "pval")
+s1$samplesize <- N_EXPOSURE                                         # per-SNP N is missing for this GWAS in OpenGWAS; study-level N used
+s1$F_stat <- (exp_dat$beta.exposure / exp_dat$se.exposure)^2
+s1$R2     <- 2 * exp_dat$eaf.exposure * (1 - exp_dat$eaf.exposure) * exp_dat$beta.exposure^2
+wr(s1, "TableS1_GlycA_instruments.csv")
+```
+
+## Tables S2 and S3 - SNP-level harmonised data (all harmonised rows; removed SNPs are flagged)
+
+```{r s2s3}
+harm_tab <- function(file, key) {
+  h <- readRDS(file.path(DIR$proc, file)); h <- h[, setdiff(names(h), STEIGER_COLS)]
+  h <- merge(h, bat[[key]]$dat[, c("SNP", "steiger_dir", "steiger_pval")], by = "SNP", all.x = TRUE, sort = FALSE)
+  h[, c("SNP", "chr.exposure", "pos.exposure", "effect_allele.exposure", "other_allele.exposure", "eaf.exposure", "beta.exposure", "se.exposure",
+        "pval.exposure", "beta.outcome", "se.outcome", "pval.outcome", "eaf.outcome", "palindromic", "mr_keep", "steiger_dir", "steiger_pval")]
+}
+wr(harm_tab("dat_megastroke_harmonised.rds", "MEGASTROKE"), "TableS2_MEGASTROKE_harmonised.csv")
+wr(harm_tab("dat_gigastroke_harmonised.rds", "GIGASTROKE"), "TableS3_GIGASTROKE_harmonised.csv")
+```
+
+## Table S4 - MR estimates, all five methods, both overall analyses
+
+```{r s4}
+ov <- c("MEGASTROKE", "GIGASTROKE")
+s4 <- do.call(rbind, lapply(ov, function(k) {
+  x <- generate_odds_ratios(bat[[k]]$res); x$outcome_label <- k
+  x[, c("outcome_label", "method", "nsnp", "b", "se", "pval", "or", "or_lci95", "or_uci95")] }))
+wr(rnd(s4, c("b", "se", "or", "or_lci95", "or_uci95")), "TableS4_MR_results.csv")
+print(s4[s4$method == M[["ivw"]], ])
+```
+
+## Table S5 - heterogeneity, pleiotropy, MR-PRESSO, Steiger
+
+```{r s5}
+s5a <- do.call(rbind, lapply(ov, function(k) cbind(outcome_label = k, bat[[k]]$het[, c("method", "Q", "Q_df", "Q_pval")])))
+s5b <- do.call(rbind, lapply(ov, function(k) cbind(outcome_label = k, bat[[k]]$pleio[, c("egger_intercept", "se", "pval")])))
+s5c <- do.call(rbind, lapply(names(bat), function(k) cbind(outcome_label = k, bat[[k]]$presso_sum)))
+s5d <- do.call(rbind, lapply(names(bat), function(k) {
+  d <- bat[[k]]$dat; f <- d[!d$steiger_dir, ]
+  data.frame(outcome_label = k, n_tested = nrow(d), n_steiger_true = sum(d$steiger_dir), n_steiger_false = nrow(f),
+             steiger_false_snps = paste(f$SNP, collapse = ";"), outcome_p_of_false_snps = paste(signif(f$pval.outcome, 2), collapse = ";")) }))
+wr(rnd(s5a, "Q"), "TableS5a_heterogeneity.csv"); wr(s5b, "TableS5b_pleiotropy_egger_intercept.csv")
+wr(s5c, "TableS5c_presso_summary.csv"); wr(s5d, "TableS5d_steiger_directionality.csv")
+print(s5c[, c("outcome_label", "global_p", "n_outliers", "outlier_snps", "distortion_p")]); print(s5d)
+```
+
+## Tables S6, S7, S7b and S10 - multivariable MR
+
+```{r s6}
+t6 <- mvo$table_s6; t6 <- cbind(t6, or_ci(t6$b, t6$se))
+wr(rnd(t6[, c("id.exposure", "exposure", "id.outcome", "outcome", "nsnp", "b", "se", "pval", "OR", "OR_lci", "OR_uci")], c("b", "se", "OR", "OR_lci", "OR_uci")),
+   "TableS6_MVMR_results.csv")
+nm <- c("ieu-b-40" = "Body mass index (ieu-b-40)", "ieu-b-4877" = "Smoking initiation (ieu-b-4877)", "met-d-GlycA" = "Glycoprotein acetyls (met-d-GlycA)")
+wr(data.frame(exposure = nm[names(mvo$F3)], conditional_F = round(unname(mvo$F3), 2), weak_instrument_F_lt_10 = unname(mvo$F3) < 10),
+   "TableS7_MVMR_instrument_strength.csv")
+wr(data.frame(statistic = "Q_A (conditional heterogeneity, MVMR)", Q = round(mvo$Qa$Qstat, 2), df = mvo$Qa_df, pval = mvo$Qa$Qpval),
+   "TableS7b_MVMR_Qa_heterogeneity.csv")
+tr <- mvo$tradeoff
+glyca_cols <- c("GlycA_beta", "GlycA_se", "GlycA_OR", "GlycA_OR_lci", "GlycA_OR_uci"); f_cols <- c("GlycA_conditional_F", "BMI_conditional_F", "smoking_conditional_F")
+tr[, glyca_cols] <- lapply(tr[, glyca_cols], round, 4); tr[, f_cols] <- lapply(tr[, f_cols], round, 2)
+tr$note <- c("Diagnostic only: SNP set is dominated by BMI/smoking instruments; not a valid univariable MR estimate", "", "", "Model reported in the manuscript")
+wr(tr, "TableS10_MVMR_covariate_tradeoff.csv")
+```
+
+## Tables S9a-e - GIGASTROKE subtypes
+
+```{r s9}
+sub <- c("CES", "LAS", "SVS")
+s9a <- do.call(rbind, lapply(sub, function(k) { x <- generate_odds_ratios(bat[[k]]$res); x$subtype <- k
+  x[, c("subtype", "method", "nsnp", "b", "se", "pval", "or", "or_lci95", "or_uci95")] }))
+s9b <- do.call(rbind, lapply(sub, function(k) cbind(subtype = k, bat[[k]]$het[, c("method", "Q", "Q_df", "Q_pval")])))
+s9c <- do.call(rbind, lapply(sub, function(k) cbind(subtype = k, bat[[k]]$pleio[, c("egger_intercept", "se", "pval")])))
+s9d <- do.call(rbind, lapply(sub, function(k) cbind(subtype = k, bat[[k]]$presso_sum)))
+s9e <- do.call(rbind, lapply(sub, function(k) cbind(subtype = k, bat[[k]]$dat[, c("SNP", "chr.exposure", "pos.exposure", "beta.exposure", "se.exposure",
+                                                                                    "beta.outcome", "se.outcome", "pval.outcome", "steiger_dir", "steiger_pval")])))
+wr(rnd(s9a, c("b", "se", "or", "or_lci95", "or_uci95")), "TableS9a_subtype_MR_results.csv"); wr(rnd(s9b, "Q"), "TableS9b_subtype_heterogeneity.csv")
+wr(s9c, "TableS9c_subtype_pleiotropy.csv"); wr(s9d, "TableS9d_subtype_presso.csv"); wr(s9e, "TableS9e_subtype_harmonised_with_steiger.csv")
+print(s9a[s9a$method == M[["ivw"]], ])
+```

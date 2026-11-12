@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite the software and the article it belongs to."
+title: "GlycA and ischemic stroke: two-sample Mendelian randomization pipeline"
+abstract: >-
+  Fully scripted, seeded R pipeline (TwoSampleMR, MR-PRESSO, MVMR, mr.raps) estimating the causal
+  effect of circulating glycoprotein acetyls (GlycA) on ischemic stroke and its subtypes in
+  MEGASTROKE and GIGASTROKE, with multivariable MR, power analysis, robustness, atrial-fibrillation
+  and reverse-direction analyses, plus independent Python re-implementations of the estimators.
+type: software
+authors:
+  - family-names: Ghinea
+    given-names: Madalin
+    affiliation: "Institute of Cellular Biology and Pathology Nicolae Simionescu, Bucharest, Romania"
+  - family-names: Gafencu
+    given-names: Anca Violeta
+    affiliation: "Institute of Cellular Biology and Pathology Nicolae Simionescu, Bucharest, Romania"
+license: MIT
+version: "1.0.0"
+date-released: "2026-11-12"
+keywords:
+  - Mendelian randomization
+  - GlycA
+  - glycoprotein acetyls
+  - ischemic stroke
+  - inflammation

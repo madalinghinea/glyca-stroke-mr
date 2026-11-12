@@ -1,0 +1,13 @@
+"Outcome","Method","N_SNPs","beta","se","OR","CI_lower","CI_upper","P","Note"
+"GIGASTROKE CES (GCST90104541; 10,804 cases / 1,234,808 controls)","MR Egger",41,-0.0977,0.1117,0.9069,0.7286,1.1288,0.387,NA
+"GIGASTROKE CES (GCST90104541; 10,804 cases / 1,234,808 controls)","Weighted median",41,-0.1482,0.0938,0.8623,0.7175,1.0363,0.114,NA
+"GIGASTROKE CES (GCST90104541; 10,804 cases / 1,234,808 controls)","Inverse variance weighted",41,-0.1585,0.063,0.8534,0.7543,0.9655,0.0118,NA
+"GIGASTROKE CES (GCST90104541; 10,804 cases / 1,234,808 controls)","Simple mode",41,-0.1281,0.1454,0.8798,0.6616,1.1699,0.384,NA
+"GIGASTROKE CES (GCST90104541; 10,804 cases / 1,234,808 controls)","Weighted mode",41,-0.136,0.082,0.8729,0.7432,1.0251,0.105,NA
+"MEGASTROKE CES (GCST006910; 7,193 cases / 355,468 controls)","MR Egger",51,-0.0271,0.1195,0.9733,0.77,1.2302,0.822,NA
+"MEGASTROKE CES (GCST006910; 7,193 cases / 355,468 controls)","Weighted median",51,-0.1145,0.1041,0.8918,0.7272,1.0936,0.271,NA
+"MEGASTROKE CES (GCST006910; 7,193 cases / 355,468 controls)","Inverse variance weighted",51,-0.0977,0.0678,0.9069,0.794,1.0358,0.15,NA
+"MEGASTROKE CES (GCST006910; 7,193 cases / 355,468 controls)","Simple mode",51,-0.2576,0.1903,0.7729,0.5323,1.1223,0.182,NA
+"MEGASTROKE CES (GCST006910; 7,193 cases / 355,468 controls)","Weighted mode",51,-0.1211,0.1027,0.886,0.7245,1.0835,0.244,NA
+"GIGASTROKE CES (GCST90104541; 10,804 cases / 1,234,808 controls)","Cochran Q (IVW) / Egger intercept P",41,NA,NA,NA,NA,NA,NA,"Q P=0.761; Egger intercept P=0.513"
+"MEGASTROKE CES (GCST006910; 7,193 cases / 355,468 controls)","Cochran Q (IVW) / Egger intercept P",51,NA,NA,NA,NA,NA,NA,"Q P=0.925; Egger intercept P=0.476"

@@ -1,0 +1,82 @@
+---
+title: "05 - Multivariable MR (GlycA, BMI, smoking initiation) vs MEGASTROKE"
+format: html
+---
+
+Covariate GWAS: BMI `ieu-b-40` (Yengo et al. 2018, GIANT + UK Biobank, N = 681,275) and smoking initiation `ieu-b-4877`
+(Liu et al. 2019, GSCAN, N = 607,291). Both overlap the UK Biobank sample of `met-d-GlycA`; overlap is a limitation, not a
+quantified bias. The MVMR uses the MEGASTROKE outcome only (GIGASTROKE includes UK Biobank participants).
+
+```{r setup}
+source("00_setup.R")
+library(MVMR)
+```
+
+## Stage A - build the MVMR dataset (OpenGWAS token)
+
+`mv_extract_exposures()` takes the union of the genome-wide significant SNPs of the three exposures (p < 5e-8, joint LD
+clumping r2 = 0.001, 10,000 kb, European panel); `mv_harmonise_data()` aligns them to the outcome.
+
+```{r extract}
+f_mv <- file.path(DIR$proc, "mvdat.rds")
+if (RUN_EXTRACTION || !file.exists(f_mv)) {
+  library(ieugwasr)
+  exposure_dat <- mv_extract_exposures(c("met-d-GlycA", "ieu-b-40", "ieu-b-4877"))
+  outcome_dat  <- extract_outcome_data(snps = exposure_dat$SNP, outcomes = "ebi-a-GCST006908")
+  saveRDS(mv_harmonise_data(exposure_dat, outcome_dat), f_mv)
+}
+```
+
+## Stage B - analysis (offline)
+
+Conditional F-statistics (Sanderson-Windmeijer) and Q_A come from the MVMR package with `gencov = 0`: individual-level
+data are unavailable to estimate the covariance between exposure estimates, which is non-zero under sample overlap.
+
+```{r mvmr}
+mvdat <- readRDS(f_mv)
+cat("MVMR instruments (SNPs):", nrow(mvdat$exposure_beta), "\n")
+set.seed(SEED)
+res_mv   <- mv_multiple(mvdat)
+table_s6 <- res_mv$result
+print(table_s6[, c("exposure", "nsnp", "b", "se", "pval")])
+
+mv_F <- function(cols) {
+  fd <- format_mvmr(BXGs = mvdat$exposure_beta[, cols, drop = FALSE], BYG = mvdat$outcome_beta,
+                    seBXGs = mvdat$exposure_se[, cols, drop = FALSE], seBYG = mvdat$outcome_se, RSID = rownames(mvdat$exposure_beta))
+  list(F  = setNames(unlist(unclass(strength_mvmr(r_input = fd, gencov = 0))[seq_along(cols)]), cols),
+       Qa = suppressWarnings(pleiotropy_mvmr(r_input = fd, gencov = 0)))
+}
+ids  <- colnames(mvdat$exposure_beta)
+all3 <- mv_F(ids)
+print(all3$F)
+cat(sprintf("Q_A = %.2f on %d df, p = %s\n", all3$Qa$Qstat, length(mvdat$outcome_beta) - length(ids), fmt_p(all3$Qa$Qpval)))
+```
+
+Covariate comparison: does adding BMI and/or smoking change the GlycA estimate or its conditional instrument strength?
+The GlycA-only model on the 446-SNP set is a diagnostic only, not a valid univariable MR estimate, because the set is
+dominated by BMI and smoking instruments.
+
+```{r tradeoff}
+lm_mv <- function(cols) {
+  fit <- lm(mvdat$outcome_beta ~ 0 + mvdat$exposure_beta[, cols, drop = FALSE], weights = 1 / mvdat$outcome_se^2)
+  co <- coef(summary(fit)); rownames(co) <- cols; co
+}
+models <- list("GlycA alone (446-SNP set)" = "met-d-GlycA", "GlycA + BMI" = c("met-d-GlycA", "ieu-b-40"),
+               "GlycA + smoking" = c("met-d-GlycA", "ieu-b-4877"), "GlycA + BMI + smoking (manuscript)" = ids)
+tradeoff <- do.call(rbind, lapply(names(models), function(m) {
+  cols <- models[[m]]; g <- lm_mv(cols)["met-d-GlycA", ]
+  Fs <- if (length(cols) > 1) mv_F(cols)$F else setNames(NA_real_, cols)
+  data.frame(model = m, n_snps = nrow(mvdat$exposure_beta), GlycA_beta = g[1], GlycA_se = g[2], GlycA_p = g[4],
+             GlycA_OR = exp(g[1]), GlycA_OR_lci = exp(g[1] - 1.96 * g[2]), GlycA_OR_uci = exp(g[1] + 1.96 * g[2]),
+             GlycA_conditional_F = unname(Fs["met-d-GlycA"]), BMI_conditional_F = unname(Fs["ieu-b-40"]),
+             smoking_conditional_F = unname(Fs["ieu-b-4877"]), row.names = NULL)
+}))
+print(tradeoff, digits = 3)
+
+# the 3-exposure weighted regression must reproduce mv_multiple() exactly
+stopifnot(abs(lm_mv(ids)["met-d-GlycA", 1] - table_s6$b[table_s6$id.exposure == "met-d-GlycA"]) < 1e-8)
+
+saveRDS(list(res_mv = res_mv, table_s6 = table_s6, F3 = all3$F, Qa = unclass(all3$Qa),
+             Qa_df = length(mvdat$outcome_beta) - length(ids), tradeoff = tradeoff),
+        file.path(DIR$proc, "mvmr_summary.rds"))
+```

@@ -1,0 +1,77 @@
+---
+title: "11 - Reverse-direction MR and GlycA + AF multivariable MR (OpenGWAS token required)"
+format: html
+---
+
+Both analyses extract GlycA effects at SNPs that were not selected as GlycA instruments, which needs the OpenGWAS token
+(`OPENGWAS_JWT` in `.Renviron`). `run_all.R` runs this file only when it is named in `GLYCA_STEPS`.
+
+```{r setup}
+source("00_setup.R")
+library(ieugwasr)
+stopifnot(nzchar(Sys.getenv("OPENGWAS_JWT")))
+exp_dat <- readRDS(need_file(file.path(DIR$proc, "exp_dat.rds"), "run 01_extract_exposure.qmd stage A"))
+```
+
+## A. Reverse-direction MR: ischemic stroke to GlycA
+
+Instruments: genome-wide significant GIGASTROKE ischemic stroke SNPs (GCST90104540), reduced to one lead SNP per 1-Mb window,
+then LD-clumped with the OpenGWAS reference panel (r2 = 0.001, 10,000 kb). Outcome: `met-d-GlycA`. Without reverse causation
+the IVW estimate should be null and the instruments should explain more variance in stroke than in GlycA.
+
+```{r reverse}
+full <- fread(get_raw("GIGASTROKE"))
+full[, p_value := suppressWarnings(as.numeric(p_value))]            # the p-value column can be read as character
+gws  <- full[!is.na(p_value) & p_value < 5e-8 & !is.na(rsid) & rsid != ""]; rm(full); invisible(gc())
+setorder(gws, p_value)
+removed <- rep(FALSE, nrow(gws)); lead <- integer(0)                # positional pre-pruning keeps the clumping request small
+for (i in seq_len(nrow(gws))) {
+  if (removed[i]) next
+  lead <- c(lead, i); removed <- removed | (gws$chromosome == gws$chromosome[i] & abs(gws$base_pair_location - gws$base_pair_location[i]) <= 500000)
+}
+gws <- as.data.frame(gws[lead][!duplicated(rsid)])
+clumped <- ld_clump(dplyr::tibble(rsid = gws$rsid, pval = gws$p_value), clump_r2 = 0.001, clump_kb = 10000, clump_p = 1)
+gws <- gws[gws$rsid %in% clumped$rsid, ]
+cat("Stroke instruments after pruning and clumping:", nrow(gws), "\n")
+
+exp_stroke <- format_data(gws, type = "exposure", snp_col = "rsid", beta_col = "beta", se_col = "standard_error",
+                          eaf_col = "effect_allele_frequency", effect_allele_col = "effect_allele", other_allele_col = "other_allele",
+                          pval_col = "p_value", chr_col = "chromosome", pos_col = "base_pair_location")
+exp_stroke$exposure <- "Ischemic stroke (GIGASTROKE)"
+out_glyca <- extract_outcome_data(snps = exp_stroke$SNP, outcomes = "met-d-GlycA")
+dat_rev <- harmonise_data(exp_stroke, out_glyca, action = 2)
+dat_rev <- dat_rev[dat_rev$mr_keep, ]
+m <- outcome_meta("GIGASTROKE")
+dat_rev$ncase.exposure <- m$ncase; dat_rev$ncontrol.exposure <- m$ncontrol
+dat_rev$samplesize.exposure <- m$ncase + m$ncontrol; dat_rev$prevalence.exposure <- m$ncase / (m$ncase + m$ncontrol); dat_rev$units.exposure <- "log odds"
+dat_rev$samplesize.outcome <- N_EXPOSURE; dat_rev$units.outcome <- "SD"
+dat_rev[intersect(names(dat_rev), STEIGER_COLS)] <- NULL
+dat_rev <- steiger_filtering(dat_rev)
+set.seed(SEED); res_rev <- mr(dat_rev)
+print(res_rev[, c("method", "nsnp", "b", "se", "pval")]); print(table(Steiger_TRUE = dat_rev$steiger_dir))
+saveRDS(list(dat = dat_rev, res = res_rev), file.path(DIR$proc, "reverse_mr.rds"))
+```
+
+## B. Joint GlycA + atrial fibrillation MVMR for cardioembolic stroke
+
+AF (`ebi-a-GCST006414`, Nielsen 2018) and GlycA instruments are combined; the effects of every SNP on both exposures come
+from OpenGWAS and the outcome (GIGASTROKE CES, GCST90104541) from the local file. Check the conditional F-statistics before
+interpreting the GlycA estimate.
+
+```{r mvmr_af}
+ex_mv <- mv_extract_exposures(c("met-d-GlycA", "ebi-a-GCST006414"))
+ces <- fread(get_raw("CES"), select = c("chromosome", "base_pair_location", "effect_allele", "other_allele", "beta",
+                                         "standard_error", "effect_allele_frequency", "p_value", "rsid"))
+ces <- as.data.frame(ces[rsid %in% ex_mv$SNP]); ces <- ces[!duplicated(ces$rsid), ]
+out_ces <- format_data(ces, type = "outcome", snp_col = "rsid", beta_col = "beta", se_col = "standard_error",
+                       eaf_col = "effect_allele_frequency", effect_allele_col = "effect_allele", other_allele_col = "other_allele", pval_col = "p_value")
+out_ces$outcome <- outcome_meta("CES")$label; out_ces$id.outcome <- "GCST90104541"
+mv <- mv_harmonise_data(ex_mv, out_ces)
+set.seed(SEED); res_mv_af <- mv_multiple(mv)
+print(res_mv_af$result[, c("exposure", "nsnp", "b", "se", "pval")])
+
+library(MVMR)
+fd <- format_mvmr(BXGs = mv$exposure_beta, BYG = mv$outcome_beta, seBXGs = mv$exposure_se, seBYG = mv$outcome_se, RSID = rownames(mv$exposure_beta))
+print(strength_mvmr(fd, gencov = 0)); print(pleiotropy_mvmr(fd, gencov = 0))
+saveRDS(list(mv = mv, res = res_mv_af), file.path(DIR$proc, "mvmr_glyca_af_ces.rds"))
+```

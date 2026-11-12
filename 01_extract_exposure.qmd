@@ -1,0 +1,46 @@
+---
+title: "01 - GlycA exposure instruments"
+format: html
+---
+
+Exposure: `met-d-GlycA` (UK Biobank, Nightingale NMR, MRC-IEU pipeline, N = 115,078, SD units).
+All later scripts read `data/processed/exp_dat.rds`, so one fixed instrument set is used throughout; re-running
+stage A against a later OpenGWAS snapshot can change it.
+
+```{r setup}
+source("00_setup.R")
+```
+
+## Stage A - extract instruments (OpenGWAS token; runs only with GLYCA_RUN_EXTRACTION=1)
+
+The token is read from the environment variable `OPENGWAS_JWT` (set in `.Renviron`, never in a script). The
+OpenGWAS record of the exposure is saved to `logs/gwasinfo_met-d-GlycA.csv` to complete the exposure citation.
+
+```{r extract}
+if (RUN_EXTRACTION) {
+  library(ieugwasr)
+  write.csv(as.data.frame(gwasinfo("met-d-GlycA")), file.path(DIR$log, "gwasinfo_met-d-GlycA.csv"), row.names = FALSE)
+  exp_dat <- extract_instruments(outcomes = "met-d-GlycA",          # `outcomes` is TwoSampleMR's argument name for the source GWAS
+                                 p1 = 5e-8, clump = TRUE, r2 = 0.001, kb = 10000)
+  exp_dat$F <- (exp_dat$beta.exposure / exp_dat$se.exposure)^2
+  saveRDS(exp_dat, file.path(DIR$proc, "exp_dat.rds"))
+}
+```
+
+## Stage B - instrument summary (offline)
+
+```{r summary}
+exp_dat <- readRDS(need_file(file.path(DIR$proc, "exp_dat.rds"), "run stage A (needs the OpenGWAS token)"))
+exp_dat$F  <- (exp_dat$beta.exposure / exp_dat$se.exposure)^2
+exp_dat$r2 <- 2 * exp_dat$eaf.exposure * (1 - exp_dat$eaf.exposure) * exp_dat$beta.exposure^2
+stopifnot(nrow(exp_dat) == 60, !anyDuplicated(exp_dat$SNP))         # frozen instrument set used in the manuscript
+
+cat(sprintf("Instruments: %d | F: min %.1f, mean %.1f, max %.1f | variance explained: %.2f%%\n",
+            nrow(exp_dat), min(exp_dat$F), mean(exp_dat$F), max(exp_dat$F), 100 * sum(exp_dat$r2)))
+R2_tot   <- sum(exp_dat$r2)
+F_joint  <- (R2_tot / (1 - R2_tot)) * (N_EXPOSURE - nrow(exp_dat) - 1) / nrow(exp_dat)       # joint F-statistic of the instrument set
+cat(sprintf("Joint F-statistic: %.1f\n", F_joint))
+top <- which.max(exp_dat$F)
+cat(sprintf("Instruments with F < 30: %d | strongest: %s (F = %.1f, chr%s:%s)\n",
+            sum(exp_dat$F < 30), exp_dat$SNP[top], exp_dat$F[top], exp_dat$chr.exposure[top], exp_dat$pos.exposure[top]))
+```
